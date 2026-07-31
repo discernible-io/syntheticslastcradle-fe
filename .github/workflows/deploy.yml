@@ -17,7 +17,7 @@ env:
   SSH_USER: ${{ github.ref == 'refs/heads/main' && secrets.SSH_USER_MAIN || secrets.SSH_USER_DEVELOPMENT }}
   SSH_PRIVATE_KEY: ${{ github.ref == 'refs/heads/main' && secrets.SSH_PRIVATE_KEY_MAIN || secrets.SSH_PRIVATE_KEY_DEVELOPMENT }}
   SSH_KNOWN_HOSTS: ${{ github.ref == 'refs/heads/main' && secrets.SSH_KNOWN_HOSTS_MAIN || secrets.SSH_KNOWN_HOSTS_DEVELOPMENT }}
-  DOMAIN: ${{ github.ref == 'refs/heads/main' && 'slc.discernible.io' || 'slc.dihola.io' }}
+  DOMAIN: ${{ github.ref == 'refs/heads/main' && 'slc.identyclaw.com' || 'slc.dihola.io' }}
   APP_PORT: 10443
   APP_DIR: /home/${{ github.ref == 'refs/heads/main' && secrets.SSH_USER_MAIN || secrets.SSH_USER_DEVELOPMENT }}/slcfrontend-app
   POD_NAME: slcfrontend-pod

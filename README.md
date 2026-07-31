@@ -33,7 +33,7 @@ Mirrors `mintclient-idc`:
 - **Images:** GHCR `…/slcfrontend-app` + `…/slcfrontend-nginx`
 - **Host runtime:** `~/slcfrontend-app` (certs, logs, secrets) — not this git tree
 - **Port:** `10443`
-- **Domains:** `slc.dihola.io` (dev) / `slc.discernible.io` (main)
+- **Domains:** `slc.dihola.io` (dev) / `slc.identyclaw.com` (main)
 
 Workflow: `.github/workflows/deploy.yml`  
 Local mirror: `./scripts/deploy-local-podman.sh`
