@@ -1,0 +1,32 @@
+# Ignore all PEM files
+*.pem
+
+node_modules
+npm-debug.log
+.git
+.gitignore
+
+# Local-only env (CI uses committed .env.main / .env.development)
+.env
+.env.*
+!.env.main
+!.env.development
+!.env.example
+
+dist
+build
+.vite
+
+logs
+*.log
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+certs
+secrets

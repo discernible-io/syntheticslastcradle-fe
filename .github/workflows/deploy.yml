@@ -1,0 +1,223 @@
+name: Deploy slcfrontend
+
+on:
+  push:
+    branches: [ main, development ]
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: 'Commit SHA to deploy'
+        required: false
+        default: ''
+
+env:
+  DEPLOY_SHA: ${{ github.event.inputs.commit_sha || github.sha }}
+  DEPLOY_TIER: ${{ github.ref == 'refs/heads/main' && 'main' || 'development' }}
+  SSH_HOST: ${{ github.ref == 'refs/heads/main' && secrets.SSH_HOST_MAIN || secrets.SSH_HOST_DEVELOPMENT }}
+  SSH_USER: ${{ github.ref == 'refs/heads/main' && secrets.SSH_USER_MAIN || secrets.SSH_USER_DEVELOPMENT }}
+  SSH_PRIVATE_KEY: ${{ github.ref == 'refs/heads/main' && secrets.SSH_PRIVATE_KEY_MAIN || secrets.SSH_PRIVATE_KEY_DEVELOPMENT }}
+  SSH_KNOWN_HOSTS: ${{ github.ref == 'refs/heads/main' && secrets.SSH_KNOWN_HOSTS_MAIN || secrets.SSH_KNOWN_HOSTS_DEVELOPMENT }}
+  DOMAIN: ${{ github.ref == 'refs/heads/main' && 'slc.discernible.io' || 'slc.dihola.io' }}
+  APP_PORT: 10443
+  APP_DIR: /home/${{ github.ref == 'refs/heads/main' && secrets.SSH_USER_MAIN || secrets.SSH_USER_DEVELOPMENT }}/slcfrontend-app
+  POD_NAME: slcfrontend-pod
+  APP_CONTAINER_NAME: slcfrontend-container
+  NGINX_CONTAINER_NAME: slcfrontend-nginx
+  REGISTRY: ghcr.io
+  APP_IMAGE_NAME: ${{ github.repository }}/slcfrontend-app
+  NGINX_IMAGE_NAME: ${{ github.repository }}/slcfrontend-nginx
+  HEALTH_CHECK_TIMEOUT: 120
+  HEALTH_CHECK_INTERVAL: 5
+
+jobs:
+  build-images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
+          fetch-depth: 0
+
+      - name: Secret scan (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate public env files
+        run: node scripts/validate-env-files.mjs
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push React app image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./react.Dockerfile
+          push: true
+          build-args: |
+            APP_BUILD_ENV=${{ env.DEPLOY_TIER }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}:${{ env.DEPLOY_SHA }}-${{ env.DEPLOY_TIER }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Nginx image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./nginx.Dockerfile
+          push: true
+          build-args: |
+            NODE_ENV=${{ env.DEPLOY_TIER }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:${{ env.DEPLOY_SHA }}-${{ env.DEPLOY_TIER }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  test-and-deploy:
+    needs: build-images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate required SSH secrets
+        run: |
+          set -euo pipefail
+
+          missing=0
+          for var in SSH_HOST SSH_USER SSH_PRIVATE_KEY SSH_KNOWN_HOSTS; do
+            if [ -z "${!var:-}" ]; then
+              echo "::error::${var} is missing or empty for this branch."
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          name: id_rsa
+          known_hosts: ${{ env.SSH_KNOWN_HOSTS }}
+
+      - name: Validate SSH host key
+        run: |
+          set -euo pipefail
+
+          if ! ssh-keygen -F "${SSH_HOST}" -f ~/.ssh/known_hosts >/dev/null; then
+            echo "::error::SSH_KNOWN_HOSTS does not contain an entry for SSH_HOST."
+            echo "Installed known_hosts fingerprints:"
+            ssh-keygen -lf ~/.ssh/known_hosts || true
+            echo "Live host key fingerprints for SSH_HOST:"
+            ssh-keyscan -T 10 -t ed25519,rsa "${SSH_HOST}" 2>/dev/null | ssh-keygen -lf - || true
+            exit 1
+          fi
+
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 "${SSH_USER}@${SSH_HOST}" "true"
+
+      - name: Setup directories and login to GHCR
+        env:
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+        run: |
+          ssh ${{ env.SSH_USER }}@${{ env.SSH_HOST }} "mkdir -p ${{ env.APP_DIR }}/{certs,logs,data,nginx,secrets} && mkdir -p ${{ env.APP_DIR }}/logs/nginx && chmod 711 ${{ env.APP_DIR }}/certs && chmod 750 ${{ env.APP_DIR }}/secrets && chmod 0775 ${{ env.APP_DIR }}/logs/nginx && podman unshare chown -R 101:101 ${{ env.APP_DIR }}/logs/nginx || true"
+          if [ -z "${GHCR_PULL_TOKEN}" ]; then
+            echo "::error::GHCR_PULL_TOKEN secret is missing or empty. Add a PAT with read:packages scope."
+            exit 1
+          fi
+          printf '%s\n' "$GHCR_PULL_TOKEN" | ssh ${{ env.SSH_USER }}@${{ env.SSH_HOST }} \
+            "podman login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin"
+
+      - name: Deploy containers
+        id: deploy
+        run: |
+          ssh ${{ env.SSH_USER }}@${{ env.SSH_HOST }} "
+            set -euxo pipefail
+            cd ${{ env.APP_DIR }}
+
+            podman pod exists ${{ env.POD_NAME }} && podman pod rm -f ${{ env.POD_NAME }} || true
+
+            podman pull ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}:${{ env.DEPLOY_SHA }}-${{ env.DEPLOY_TIER }}
+            podman pull ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:${{ env.DEPLOY_SHA }}-${{ env.DEPLOY_TIER }}
+
+            podman pod create --name ${{ env.POD_NAME }} -p ${{ env.APP_PORT }}:${{ env.APP_PORT }}
+
+            podman run -d \
+              --log-driver=k8s-file \
+              --pod ${{ env.POD_NAME }} \
+              --name ${{ env.APP_CONTAINER_NAME }} \
+              --restart=unless-stopped \
+              ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}:${{ env.DEPLOY_SHA }}-${{ env.DEPLOY_TIER }}
+
+            podman container exists ${{ env.APP_CONTAINER_NAME }}
+            podman inspect ${{ env.APP_CONTAINER_NAME }} --format '{{.State.Status}}' | grep -E 'running|created'
+
+            mkdir -p ${{ env.APP_DIR }}/logs/nginx
+            chmod 0775 ${{ env.APP_DIR }}/logs/nginx || true
+            podman unshare chown -R 101:101 ${{ env.APP_DIR }}/logs/nginx || true
+
+            chmod 711 ${{ env.APP_DIR }}/certs || true
+            CERT_DIR=${{ env.APP_DIR }}/certs
+            for f in privkey.pem tls.key; do
+              if [ -f \$CERT_DIR/\$f ]; then
+                podman unshare chown 101:101 \$CERT_DIR/\$f || true
+                podman unshare chmod 600 \$CERT_DIR/\$f || true
+              fi
+            done
+            for f in fullchain.pem chain.pem cert.pem tls.crt; do
+              if [ -f \$CERT_DIR/\$f ]; then
+                podman unshare chown 101:101 \$CERT_DIR/\$f || true
+                podman unshare chmod 644 \$CERT_DIR/\$f || true
+              fi
+            done
+
+            podman run -d \
+              --log-driver=k8s-file \
+              --pod ${{ env.POD_NAME }} \
+              --name ${{ env.NGINX_CONTAINER_NAME }} \
+              --restart=unless-stopped \
+              -v ${{ env.APP_DIR }}/certs:/app/certs:ro,Z \
+              -v ${{ env.APP_DIR }}/logs/nginx:/var/log/nginx:Z \
+              ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:${{ env.DEPLOY_SHA }}-${{ env.DEPLOY_TIER }}
+
+            podman ps -a
+            podman logs ${{ env.APP_CONTAINER_NAME }} || true
+            podman logs ${{ env.NGINX_CONTAINER_NAME }} || true
+          "
+
+      - name: Verify deployment
+        env:
+          DOMAIN: ${{ env.DOMAIN }}
+          APP_PORT: ${{ env.APP_PORT }}
+          HEALTH_CHECK_TIMEOUT: ${{ env.HEALTH_CHECK_TIMEOUT }}
+          HEALTH_CHECK_INTERVAL: ${{ env.HEALTH_CHECK_INTERVAL }}
+        run: |
+          set -euo pipefail
+          SITE_URL="https://${DOMAIN}:${APP_PORT}/"
+          echo "Probing: ${SITE_URL}"
+          elapsed=0
+          while [ "$elapsed" -lt "$HEALTH_CHECK_TIMEOUT" ]; do
+            code=$(curl -sk -m 5 -o /dev/null -w "%{http_code}" "${SITE_URL}" || echo "000")
+            case "${code}" in
+              200|301|302|304)
+                echo "Site responded with HTTP ${code}"
+                exit 0
+                ;;
+            esac
+            echo "Verify attempt (last HTTP ${code})"
+            sleep "${HEALTH_CHECK_INTERVAL}"
+            elapsed=$((elapsed + HEALTH_CHECK_INTERVAL))
+          done
+          echo "::error::Site failed verification at ${SITE_URL}"
+          exit 1

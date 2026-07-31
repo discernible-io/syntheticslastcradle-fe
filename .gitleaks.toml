@@ -1,0 +1,11 @@
+# Gitleaks config for syntheticslastcradle-fe. Allowlist only documented public build inputs.
+
+title = "syntheticslastcradle-fe gitleaks"
+
+[allowlist]
+description = "Committed public REACT_APP_* env files (bundled into the browser; not secret stores)."
+paths = [
+  '''(?i)^\.env\.example$''',
+  '''(?i)^\.env\.main$''',
+  '''(?i)^\.env\.development$''',
+]
