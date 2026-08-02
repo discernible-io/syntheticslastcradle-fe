@@ -43,6 +43,29 @@ export function clearOperatorSession() {
   localStorage.removeItem(RODIT_STORAGE_KEY);
 }
 
+/**
+ * Invalidate the server session (best-effort), then clear local JWT storage.
+ * Uses authenticateForLogout semantics — expired JWTs with a valid signature are accepted.
+ */
+export async function logoutOperatorSession() {
+  const jwt = getStoredJwt();
+  clearOperatorSession();
+  sessionStorage.removeItem(LOGIN_DATA_KEY);
+  if (!jwt || !env.apiBase) return;
+
+  try {
+    await fetch(`${env.apiBase}/api/logout`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+  } catch {
+    // Local session already cleared; network failures are non-fatal.
+  }
+}
+
 export function storeOperatorSession({ jwt, roditId }) {
   localStorage.setItem(JWT_STORAGE_KEY, jwt);
   if (roditId) {
@@ -218,7 +241,6 @@ async function exchangeNep413Signature({ signature, accountId, loginData }) {
       recipient: loginData.recipient,
       callbackUrl: loginData.callbackUrl,
     }),
-    credentials: "include",
   });
 
   const loginBody = await loginRes.json().catch(() => ({}));

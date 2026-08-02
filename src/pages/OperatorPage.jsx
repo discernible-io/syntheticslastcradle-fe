@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { env } from "../config/env.js";
 import {
   beginNep413Login,
-  clearOperatorSession,
   completeNep413Login,
   getStoredJwt,
   hasNep413CallbackHash,
   listOwnedPassports,
+  logoutOperatorSession,
   sessionFromJwt,
 } from "../auth/passportLogin.js";
 import { getOperatorWallet } from "../auth/nearWallet.js";
@@ -200,11 +200,16 @@ export function OperatorPage() {
     }
   }
 
-  function onLogout() {
-    clearOperatorSession();
-    setSession({ jwt: "", roditId: "", expired: true });
-    setLastResult(null);
+  async function onLogout() {
+    setBusy(true);
     setError(null);
+    try {
+      await logoutOperatorSession();
+      setSession({ jwt: "", roditId: "", expired: true });
+      setLastResult(null);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function onCreateContest(e) {

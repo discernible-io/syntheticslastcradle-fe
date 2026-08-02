@@ -6,11 +6,11 @@ const read = (key, fallback = "") => {
 export const env = {
   deployLabel: read("REACT_APP_DEPLOY_LABEL", "@local"),
   publicOrigin: read("REACT_APP_PUBLIC_ORIGIN", "http://localhost:5173"),
-  apiBase: read("REACT_APP_API_BASE", "https://slc.discernible.io:8443").replace(/\/$/, ""),
+  apiBase: read("REACT_APP_API_BASE", "https://slcapi.discernible.io:9443").replace(/\/$/, ""),
   verifyOrigin: read("REACT_APP_VERIFY_ORIGIN", "https://verify.identyclaw.com").replace(/\/$/, ""),
   enrollUrl: read("REACT_APP_ENROLL_URL", "https://purchase.identyclaw.com"),
   docsSiteUrl: read("REACT_APP_DOCS_SITE_URL", "https://www.discernible.io"),
-  skillUrl: read("REACT_APP_SKILL_URL", "https://slc.discernible.io:8443/api/game/skill.md"),
+  skillUrl: read("REACT_APP_SKILL_URL", "https://slcapi.discernible.io:9443/api/game/skill.md"),
   pollIntervalMs: Number(read("REACT_APP_POLL_INTERVAL_MS", "5000")) || 5000,
   title: read("REACT_APP_TITLE", "Synthetics' Last Cradle"),
   logLevel: read("REACT_APP_LOG_LEVEL", "info"),
