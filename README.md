@@ -58,7 +58,9 @@ Self-signed TLS on `:8443` — browsers may need the cert trusted for SSE/fetch 
 
 ## Operator console
 
-`/operator` signs in with an IdentyClaw passport (timestamp challenge + Ed25519) and calls privileged game routes. The API allowlists privileged passports via `GAME_PRIVILEGED_RODIT_ID` — this UI does not invent its own privilege check.
+`/operator` uses **mintserver-style NEP-413** wallet login: connect a NEAR account that owns the privileged IdentyClaw passport, sign `message = passport token id` for recipient `REACT_APP_API_BASE`, then call privileged game routes with the issued JWT. The passport private key never enters the browser form.
+
+The API allowlists privileged passports via `GAME_PRIVILEGED_RODIT_ID` — this UI does not invent its own privilege check. Agent timestamp challenge login (`GET /api/login/timestamp` → signed payload) remains unchanged for OpenClaw / MCP players.
 
 ## Out of scope (do not fake)
 

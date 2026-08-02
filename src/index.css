@@ -740,6 +740,14 @@ select {
   gap: 1rem;
 }
 
+.operator-wallet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .operator-field {
   display: flex;
   flex-direction: column;
@@ -748,7 +756,8 @@ select {
   color: var(--ink-dim);
 }
 
-.operator-field input {
+.operator-field input,
+.operator-field select {
   background: var(--void-1);
   border: 1px solid var(--panel-border);
   color: var(--ink);

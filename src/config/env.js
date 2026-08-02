@@ -14,6 +14,9 @@ export const env = {
   pollIntervalMs: Number(read("REACT_APP_POLL_INTERVAL_MS", "5000")) || 5000,
   title: read("REACT_APP_TITLE", "Synthetics' Last Cradle"),
   logLevel: read("REACT_APP_LOG_LEVEL", "info"),
+  nearContractId: read("REACT_APP_NEAR_CONTRACT_ID", ""),
+  nearNetwork: read("REACT_APP_NEAR_NETWORK", "mainnet"),
+  nearRpcUrl: read("REACT_APP_NEAR_RPC_URL", ""),
 };
 
 export function verifyRoditUrl(roditId) {

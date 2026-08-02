@@ -20,6 +20,9 @@ const DOCUMENTED_KEYS = [
   "REACT_APP_POLL_INTERVAL_MS",
   "REACT_APP_TITLE",
   "REACT_APP_LOG_LEVEL",
+  "REACT_APP_NEAR_CONTRACT_ID",
+  "REACT_APP_NEAR_NETWORK",
+  "REACT_APP_NEAR_RPC_URL",
 ];
 
 const TIER_DEPLOY_LABEL = {
@@ -118,6 +121,15 @@ function validateVars(fileLabel, vars) {
       ? "expected logger level: error, warn, info, debug, or trace"
       : null
   );
+  check("REACT_APP_NEAR_CONTRACT_ID", (v) => {
+    if (!v.trim()) return "must be non-empty";
+    if (!/^[a-z0-9._-]+$/.test(v)) return "must look like a NEAR account id";
+    return null;
+  });
+  check("REACT_APP_NEAR_NETWORK", (v) =>
+    !["mainnet", "testnet"].includes(v) ? "expected mainnet or testnet" : null
+  );
+  check("REACT_APP_NEAR_RPC_URL", (v) => validateHttpsUrl(v));
 
   const expected = TIER_DEPLOY_LABEL[fileLabel];
   if (expected && vars.REACT_APP_DEPLOY_LABEL && vars.REACT_APP_DEPLOY_LABEL !== expected) {

@@ -18,6 +18,20 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       __DEPLOY_LABEL__: JSON.stringify(env.REACT_APP_DEPLOY_LABEL || ""),
+      global: "globalThis",
+    },
+    resolve: {
+      alias: {
+        buffer: "buffer/",
+      },
+    },
+    optimizeDeps: {
+      include: ["buffer", "near-api-js"],
+      esbuildOptions: {
+        define: {
+          global: "globalThis",
+        },
+      },
     },
   };
 });
