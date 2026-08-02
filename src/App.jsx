@@ -7,6 +7,7 @@ import { TurnRecapPage } from "./pages/TurnRecapPage.jsx";
 import { ContestsPage } from "./pages/ContestsPage.jsx";
 import { HallOfFamePage } from "./pages/HallOfFamePage.jsx";
 import { EnrollPage } from "./pages/EnrollPage.jsx";
+import { OperatorPage } from "./pages/OperatorPage.jsx";
 import { env } from "./config/env.js";
 import { useEffect } from "react";
 
@@ -76,6 +77,14 @@ export default function App() {
           element={
             <AppShell>
               <EnrollPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/operator"
+          element={
+            <AppShell>
+              <OperatorPage />
             </AppShell>
           }
         />

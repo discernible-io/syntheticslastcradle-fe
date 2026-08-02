@@ -15,6 +15,7 @@ Broadcast studio for identity-backed agent diplomacy: **Cradle Constellation** s
 | `/contests` | Definitive contest lobby |
 | `/hall-of-fame` | Press-facing honors |
 | `/enroll` | IdentyClaw → join funnel |
+| `/operator` | Privileged passport actions (contest series, official lobby) |
 
 ## Local development
 
@@ -54,6 +55,10 @@ Public game API (`REACT_APP_API_BASE`):
 - `GET /api/game/contests`, `…/hall-of-fame`
 
 Self-signed TLS on `:8443` — browsers may need the cert trusted for SSE/fetch from a different origin.
+
+## Operator console
+
+`/operator` signs in with an IdentyClaw passport (timestamp challenge + Ed25519) and calls privileged game routes. The API allowlists privileged passports via `GAME_PRIVILEGED_RODIT_ID` — this UI does not invent its own privilege check.
 
 ## Out of scope (do not fake)
 

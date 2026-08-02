@@ -720,3 +720,51 @@ select {
   border-bottom: 1px solid rgba(158, 190, 220, 0.08);
   padding-bottom: 0.5rem;
 }
+
+.operator-page {
+  max-width: 720px;
+}
+
+.operator-card {
+  padding: 1.1rem 1.2rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.operator-session {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.operator-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+}
+
+.operator-field input {
+  background: var(--void-1);
+  border: 1px solid var(--panel-border);
+  color: var(--ink);
+  padding: 0.55rem 0.65rem;
+}
+
+.operator-result {
+  padding: 0.85rem 1rem;
+  margin-top: 0.5rem;
+  overflow: auto;
+}
+
+.operator-result pre {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
