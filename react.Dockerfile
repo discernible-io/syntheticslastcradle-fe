@@ -6,7 +6,8 @@ ARG APP_BUILD_ENV=main
 ENV APP_BUILD_ENV=${APP_BUILD_ENV}
 
 COPY package*.json ./
-COPY scripts/enforce-minimum-package-age.sh scripts/
+# preinstall needs enforce-*; validate:env / env:sync need the rest (mintclient-idc pattern)
+COPY scripts/ scripts/
 RUN npm ci
 
 # env:sync writes .env from .env.${APP_BUILD_ENV}; Vite loadEnv reads REACT_APP_* from .env
@@ -18,7 +19,7 @@ WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
 COPY package*.json ./
-COPY scripts/enforce-minimum-package-age.sh scripts/
+COPY scripts/ scripts/
 
 RUN npm ci --omit=dev && \
     npm install -g serve
