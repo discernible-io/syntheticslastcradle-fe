@@ -1,6 +1,10 @@
+import { useAgentLabels } from "../../hooks/useAgentLabels.js";
+
 export function SurvivalPressure({ state }) {
+  const agents = state?.agents || [];
+  const { labelOf } = useAgentLabels(agents);
   const turn = state?.game?.currentTurn || 0;
-  const living = state?.livingAgentCount ?? state?.agents?.filter((a) => a.status === "alive").length ?? 0;
+  const living = state?.livingAgentCount ?? agents.filter((a) => a.status === "alive").length ?? 0;
   const pressure = Math.min(100, Math.round((turn / 55) * 70 + Math.max(0, living - 2) * 8));
   const survivalText = state?.narrative?.survival?.summary;
   const projected = state?.projectedSurvival;
@@ -21,7 +25,7 @@ export function SurvivalPressure({ state }) {
         </p>
       )}
       <div className="cradle-afford">
-        {(state?.agents || []).map((a) => {
+        {agents.map((a) => {
           const cost = projected?.[a.id];
           let cls = "chip";
           let label = a.status === "dead" ? "husk" : "fog";
@@ -34,9 +38,10 @@ export function SurvivalPressure({ state }) {
             cls += " ok";
             label = "alive";
           }
+          const name = labelOf(a);
           return (
-            <span key={a.id} className={cls} title={a.displayName || a.roditId}>
-              {(a.displayName || a.roditId || a.id).toString().slice(0, 12)} · {label}
+            <span key={a.id} className={cls} title={name}>
+              {name.toString().slice(0, 16)} · {label}
             </span>
           );
         })}

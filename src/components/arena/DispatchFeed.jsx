@@ -1,4 +1,5 @@
 import { IdentityChip } from "../layout/IdentityChip.jsx";
+import { useAgentLabels } from "../../hooks/useAgentLabels.js";
 
 function initials(name) {
   if (!name) return "?";
@@ -12,6 +13,7 @@ function initials(name) {
 
 export function DispatchFeed({ messages = [], agents = [], turn }) {
   const byId = Object.fromEntries(agents.map((a) => [a.id, a]));
+  const { labelOf } = useAgentLabels(agents);
 
   return (
     <div className="panel dispatch">
@@ -24,7 +26,7 @@ export function DispatchFeed({ messages = [], agents = [], turn }) {
         {[...messages].reverse().map((m) => {
           const agentId = m.from_agent_id || m.fromAgentId;
           const agent = byId[agentId];
-          const name = agent?.displayName || agent?.roditId || String(agentId || "").slice(0, 8);
+          const name = labelOf(agent || agentId);
           const ts = m.created_at || m.createdAt;
           return (
             <article key={m.id} className="dispatch-item">
@@ -33,7 +35,7 @@ export function DispatchFeed({ messages = [], agents = [], turn }) {
               </div>
               <div className="dispatch-meta">
                 <span className="name">{name}</span>
-                {agent?.roditId && <IdentityChip roditId={agent.roditId} compact />}
+                {agent?.roditId && <IdentityChip roditId={agent.roditId} displayName={name} compact />}
                 {ts && <span className="tiny">{String(ts).replace("T", " ").slice(0, 19)}</span>}
               </div>
               <div className="dispatch-body">{m.body}</div>

@@ -355,17 +355,60 @@ select {
   display: block;
 }
 
+.cradle-legend {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.85rem;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.65rem;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 46%;
+  text-align: right;
+}
+
+.cradle-legend-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.7rem;
+  color: var(--ink-dim);
+  font-family: var(--font-body);
+}
+
+.cradle-legend-swatch i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 1px;
+  display: inline-block;
+}
+
 .constellation .vessel {
   transition: opacity 0.6s, transform 0.8s;
 }
 
-.constellation .vessel.alive {
+.constellation .vessel.alive .cradle-bar {
   animation: vessel-breathe 4s ease-in-out infinite;
 }
 
 .constellation .vessel.dead {
-  opacity: 0.35;
-  filter: grayscale(0.8);
+  opacity: 0.4;
+}
+
+.constellation .vessel.fogged {
+  opacity: 0.75;
+}
+
+.constellation .cradle-bar-energy {
+  animation-delay: 0s;
+}
+.constellation .cradle-bar-water {
+  animation-delay: 0.35s;
+}
+.constellation .cradle-bar-compute {
+  animation-delay: 0.7s;
 }
 
 .constellation .white-hole-core {
@@ -380,10 +423,10 @@ select {
 @keyframes vessel-breathe {
   0%,
   100% {
-    filter: brightness(1);
+    opacity: 0.82;
   }
   50% {
-    filter: brightness(1.25);
+    opacity: 1;
   }
 }
 
@@ -643,6 +686,30 @@ select {
 .trade-graph {
   width: 100%;
   height: 220px;
+}
+
+.transfer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(232, 238, 246, 0.08);
+  font-size: 0.85rem;
+}
+
+.transfer-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.transfer-resources {
+  display: inline-flex;
+  gap: 0.4rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .flow-list {

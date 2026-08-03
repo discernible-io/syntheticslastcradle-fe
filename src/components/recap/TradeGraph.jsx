@@ -1,3 +1,31 @@
+function dominantTint(e) {
+  const energy = e.energy || 0;
+  const water = e.water || 0;
+  const compute = e.compute || 0;
+  if (energy >= water && energy >= compute) return "var(--energy)";
+  if (water >= compute) return "var(--water)";
+  return "var(--compute)";
+}
+
+function ResourceLabel({ e, x, y }) {
+  const parts = [];
+  if (e.energy) parts.push({ key: "e", fill: "var(--energy)", text: `${e.energy}E` });
+  if (e.water) parts.push({ key: "w", fill: "var(--water)", text: `${e.water}W` });
+  if (e.compute) parts.push({ key: "c", fill: "var(--compute)", text: `${e.compute}C` });
+  if (parts.length === 0) return null;
+
+  return (
+    <text x={x} y={y} fontSize="10" textAnchor="middle">
+      {parts.map((p, i) => (
+        <tspan key={p.key} fill={p.fill}>
+          {i > 0 ? " " : ""}
+          {p.text}
+        </tspan>
+      ))}
+    </text>
+  );
+}
+
 export function TradeGraph({ edges = [] }) {
   const width = 720;
   const height = 220;
@@ -18,22 +46,28 @@ export function TradeGraph({ edges = [] }) {
 
   return (
     <svg className="trade-graph" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Turn trade graph">
+      <defs>
+        <marker id="trade-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="var(--ink-dim)" />
+        </marker>
+      </defs>
       {edges.map((e) => {
         const a = pos[e.fromName];
         const b = pos[e.toName];
         if (!a || !b) return null;
         return (
           <g key={e.id}>
-            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--water)" strokeWidth="1.5" opacity="0.7" />
-            <text
-              x={(a.x + b.x) / 2}
-              y={(a.y + b.y) / 2 - 4}
-              fill="var(--ink-dim)"
-              fontSize="10"
-              textAnchor="middle"
-            >
-              {e.volume}
-            </text>
+            <line
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke={dominantTint(e)}
+              strokeWidth="1.5"
+              opacity="0.75"
+              markerEnd="url(#trade-arrow)"
+            />
+            <ResourceLabel e={e} x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 4} />
           </g>
         );
       })}

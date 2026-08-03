@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getGameState, getMessages, getTrades } from "../api/client.js";
+import { lookupPassportDisplayName } from "../api/roditLookup.js";
 import { buildTurnReport } from "../api/turnReport.js";
 import { TurnRecapView } from "../components/recap/TurnRecapView.jsx";
 import { OperatorCommentary } from "../components/lobby/OperatorCommentary.jsx";
@@ -26,12 +27,26 @@ export function TurnRecapPage() {
           getMessages(gameId, turn, { signal: ac.signal }),
           getTrades(gameId, turn, { signal: ac.signal }),
         ]);
+        const agents = state?.agents || [];
+        const roditIds = [...new Set(agents.map((a) => a.roditId).filter(Boolean))];
+        const passportEntries = await Promise.all(
+          roditIds.map(async (id) => {
+            try {
+              const name = await lookupPassportDisplayName(id, { signal: ac.signal });
+              return name ? [String(id).toLowerCase(), name] : null;
+            } catch {
+              return null;
+            }
+          }),
+        );
+        const passportNameByRodit = Object.fromEntries(passportEntries.filter(Boolean));
         setReport(
           buildTurnReport({
             turn,
             state,
             messages: msgRes.messages || [],
             trades: tradeRes.trades || [],
+            passportNameByRodit,
           }),
         );
       } catch (err) {

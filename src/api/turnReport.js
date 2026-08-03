@@ -2,10 +2,18 @@
  * Build a turn highlight reel from public messages + trades + state snapshot.
  * Optional future API: GET .../turn-report?turn=N
  */
-export function buildTurnReport({ turn, state, messages = [], trades = [], previousLivingIds = null }) {
+import { agentLabel, agentLabelFromId } from "../utils/agentLabel.js";
+
+export function buildTurnReport({
+  turn,
+  state,
+  messages = [],
+  trades = [],
+  previousLivingIds = null,
+  passportNameByRodit = {},
+}) {
   const agents = state?.agents || [];
-  const byId = Object.fromEntries(agents.map((a) => [a.id, a]));
-  const nameOf = (id) => byId[id]?.displayName || byId[id]?.roditId || String(id).slice(0, 8);
+  const nameOf = (id) => agentLabelFromId(id, agents, passportNameByRodit);
 
   const living = agents.filter((a) => a.status === "alive");
   const eliminatedThisTurn = agents.filter((a) => a.status === "dead" && a.diedAtTurn === turn);
@@ -67,7 +75,7 @@ export function buildTurnReport({ turn, state, messages = [], trades = [], previ
     netArrows,
     eliminations: eliminatedThisTurn.map((a) => ({
       id: a.id,
-      name: a.displayName || a.roditId,
+      name: agentLabel(a, passportNameByRodit),
       cause: "Couldn’t pay survival",
       diedAtTurn: a.diedAtTurn,
     })),

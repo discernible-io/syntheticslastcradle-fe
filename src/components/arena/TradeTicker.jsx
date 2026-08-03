@@ -1,3 +1,5 @@
+import { useAgentLabels } from "../../hooks/useAgentLabels.js";
+
 function resourceBits(t) {
   const bits = [];
   if (t.energy) bits.push(<span key="e" className="resource-energy">{t.energy} E</span>);
@@ -7,8 +9,7 @@ function resourceBits(t) {
 }
 
 export function TradeTicker({ trades = [], agents = [] }) {
-  const byId = Object.fromEntries(agents.map((a) => [a.id, a]));
-  const name = (id) => byId[id]?.displayName || byId[id]?.roditId || String(id || "").slice(0, 8);
+  const { labelOf } = useAgentLabels(agents);
 
   return (
     <div className="panel trade-ticker">
@@ -22,9 +23,9 @@ export function TradeTicker({ trades = [], agents = [] }) {
           <div key={t.id} className="ticker-row">
             <span className="tag">{t.status}</span>
             <span>
-              <strong>{name(t.fromAgentId)}</strong>
+              <strong>{labelOf(t.fromAgentId)}</strong>
               <span className="muted"> → </span>
-              <strong>{name(t.toAgentId)}</strong>
+              <strong>{labelOf(t.toAgentId)}</strong>
             </span>
             <span style={{ display: "inline-flex", gap: "0.35rem" }}>{resourceBits(t)}</span>
             {t.rationale && (

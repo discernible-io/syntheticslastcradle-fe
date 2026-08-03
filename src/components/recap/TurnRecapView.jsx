@@ -1,6 +1,14 @@
 import { Link } from "react-router-dom";
 import { TradeGraph } from "./TradeGraph.jsx";
 
+function resourceBits(t) {
+  const bits = [];
+  if (t.energy) bits.push(<span key="e" className="resource-energy">{t.energy} E</span>);
+  if (t.water) bits.push(<span key="w" className="resource-water">{t.water} W</span>);
+  if (t.compute) bits.push(<span key="c" className="resource-compute">{t.compute} C</span>);
+  return bits.length > 0 ? bits : <span className="muted">—</span>;
+}
+
 export function TurnRecapView({ report, gameId }) {
   if (!report) return null;
   return (
@@ -43,6 +51,20 @@ export function TurnRecapView({ report, gameId }) {
       <article className="panel recap-card">
         <h2 style={{ fontSize: "1.1rem", marginBottom: "0.75rem" }}>Who funded whom</h2>
         <TradeGraph edges={report.edges} />
+        {report.edges.length > 0 && (
+          <div className="transfer-list">
+            {report.edges.map((e) => (
+              <div key={e.id} className="transfer-row">
+                <span>
+                  <strong>{e.fromName}</strong>
+                  <span className="muted"> → </span>
+                  <strong>{e.toName}</strong>
+                </span>
+                <span className="transfer-resources">{resourceBits(e)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </article>
 
       <article className="panel recap-card">

@@ -1,20 +1,21 @@
 import { useMemo } from "react";
+import { useAgentLabels } from "../../hooks/useAgentLabels.js";
 
-const SPECIALTY_COLOR = {
-  energy: "var(--energy)",
-  water: "var(--water)",
-  compute: "var(--compute)",
+const RESOURCES = [
+  { key: "energy", color: "var(--energy)", short: "E" },
+  { key: "water", color: "var(--water)", short: "W" },
+  { key: "compute", color: "var(--compute)", short: "C" },
+];
+
+const BAR = {
+  maxHeight: 64,
+  minHeight: 5,
+  maxWidth: 20,
+  minWidth: 4,
+  gap: 4,
+  fogHeight: 28,
+  fogWidth: 10,
 };
-
-function vesselScale(agent, honorsMetrics) {
-  if (agent.status === "dead") return 0.55;
-  const holdings = honorsMetrics?.finalHoldings;
-  if (typeof holdings === "number" && holdings > 0) {
-    return Math.min(1.45, 0.7 + Math.log10(holdings + 1) * 0.35);
-  }
-  // Fog: unknown inventory — size from presence only
-  return agent.intelligenceHidden ? 0.9 : 1.05;
-}
 
 function layoutPositions(agents, width, height) {
   const cx = width / 2;
@@ -43,21 +44,174 @@ function layoutPositions(agents, width, height) {
   return { pos, cx, cy };
 }
 
-export function ConstellationStage({ agents = [], flashTrades = [], honors = null, phase, turn }) {
+function sumResourceField(agents, field) {
+  const totals = { energy: 0, water: 0, compute: 0 };
+  for (const agent of agents) {
+    const bag = agent?.[field];
+    if (!bag) continue;
+    for (const { key } of RESOURCES) {
+      totals[key] += Number(bag[key]) || 0;
+    }
+  }
+  return totals;
+}
+
+function share(value, total) {
+  if (!(total > 0)) return 0;
+  return Math.max(0, Number(value) || 0) / total;
+}
+
+function lerp(min, max, t) {
+  return min + (max - min) * Math.min(1, Math.max(0, t));
+}
+
+function barsFromShares(agent, stockTotals, prodTotals) {
+  return RESOURCES.map(({ key, color, short }) => {
+    const stockShare = share(agent.inventory?.[key], stockTotals[key]);
+    const prodShare = share(agent.productionCapacity?.[key], prodTotals[key]);
+    return {
+      key,
+      short,
+      color,
+      stockShare,
+      prodShare,
+      height: lerp(BAR.minHeight, BAR.maxHeight, stockShare),
+      width: lerp(BAR.minWidth, BAR.maxWidth, prodShare),
+      stock: Number(agent.inventory?.[key]) || 0,
+      production: Number(agent.productionCapacity?.[key]) || 0,
+    };
+  });
+}
+
+/** Relative bar geometry: height ∝ stock share, width ∝ production share (vs all known agents). */
+function buildRelativeMetrics(agents) {
+  const known = agents.filter((a) => a?.inventory && a?.productionCapacity);
+  const stockTotals = sumResourceField(known, "inventory");
+  const prodTotals = sumResourceField(known, "productionCapacity");
+  const byId = {};
+
+  for (const agent of agents) {
+    const visible = Boolean(agent?.inventory && agent?.productionCapacity);
+    if (visible) {
+      byId[agent.id] = {
+        visible: true,
+        bars: barsFromShares(agent, stockTotals, prodTotals),
+      };
+      continue;
+    }
+    if (agent.status === "dead") {
+      // Husks: minimal equal bars (no private stock to compare).
+      byId[agent.id] = {
+        visible: true,
+        bars: RESOURCES.map(({ key, color, short }) => ({
+          key,
+          short,
+          color,
+          stockShare: 0,
+          prodShare: 0,
+          height: BAR.minHeight,
+          width: BAR.minWidth,
+          stock: 0,
+          production: 0,
+        })),
+      };
+      continue;
+    }
+    byId[agent.id] = { visible: false, bars: null };
+  }
+
+  return { byId, knownCount: known.length, stockTotals, prodTotals };
+}
+
+function CradleBars({ bars, dead = false }) {
+  const totalWidth =
+    bars.reduce((sum, b) => sum + b.width, 0) + BAR.gap * (bars.length - 1);
+  let x = -totalWidth / 2;
+  const baseline = 0;
+
+  return (
+    <g className="cradle-bars">
+      <line
+        x1={-totalWidth / 2 - 4}
+        x2={totalWidth / 2 + 4}
+        y1={baseline}
+        y2={baseline}
+        stroke="rgba(232,238,246,0.22)"
+        strokeWidth="1"
+      />
+      {bars.map((bar) => {
+        const rect = (
+          <rect
+            key={bar.key}
+            className={`cradle-bar cradle-bar-${bar.key}`}
+            x={x}
+            y={baseline - bar.height}
+            width={bar.width}
+            height={bar.height}
+            rx="1.5"
+            fill={dead ? "var(--husk)" : bar.color}
+            opacity={dead ? 0.45 : 0.9}
+          >
+            <title>{`${bar.short}: stock ${(bar.stockShare * 100).toFixed(0)}% of field · production ${(bar.prodShare * 100).toFixed(0)}% of field`}</title>
+          </rect>
+        );
+        x += bar.width + BAR.gap;
+        return rect;
+      })}
+    </g>
+  );
+}
+
+function FogBars() {
+  const totalWidth = BAR.fogWidth * 3 + BAR.gap * 2;
+  let x = -totalWidth / 2;
+  return (
+    <g className="cradle-bars fog">
+      <line
+        x1={-totalWidth / 2 - 4}
+        x2={totalWidth / 2 + 4}
+        y1={0}
+        y2={0}
+        stroke="rgba(232,238,246,0.18)"
+        strokeWidth="1"
+        strokeDasharray="3 3"
+      />
+      {RESOURCES.map((r) => {
+        const el = (
+          <rect
+            key={r.key}
+            x={x}
+            y={-BAR.fogHeight}
+            width={BAR.fogWidth}
+            height={BAR.fogHeight}
+            rx="1.5"
+            fill="var(--husk)"
+            opacity="0.35"
+            stroke="rgba(232,238,246,0.28)"
+            strokeWidth="1"
+            strokeDasharray="3 3"
+          >
+            <title>Intelligence fog — stock & production hidden</title>
+          </rect>
+        );
+        x += BAR.fogWidth + BAR.gap;
+        return el;
+      })}
+    </g>
+  );
+}
+
+export function ConstellationStage({ agents = [], flashTrades = [], honors: _honors = null, phase, turn }) {
   const width = 900;
   const height = 560;
-  const metricsByAgent = useMemo(() => {
-    const map = {};
-    for (const h of honors?.honors?.standings || honors?.honors?.honorees || []) {
-      map[h.agentId] = h.metrics;
-    }
-    return map;
-  }, [honors]);
+  const { labelOf } = useAgentLabels(agents);
 
   const { pos, cx, cy } = useMemo(() => layoutPositions(agents, width, height), [agents]);
+  const relative = useMemo(() => buildRelativeMetrics(agents), [agents]);
 
   const livingCount = agents.filter((a) => a.status === "alive").length;
   const climax = livingCount <= 2 && agents.length > 0;
+  const foggedAll = agents.length > 0 && relative.knownCount === 0;
 
   return (
     <div className="panel arena-stage" style={{ padding: 0 }}>
@@ -70,12 +224,26 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors = nul
           display: "flex",
           gap: "0.5rem",
           alignItems: "center",
+          flexWrap: "wrap",
         }}
       >
         <span className="tag">Cradle Constellation</span>
         {turn != null && <span className="tiny">Cycle {turn}</span>}
         {phase && <span className="tiny">{phase}</span>}
       </div>
+
+      <div className="cradle-legend" aria-hidden="true">
+        <span className="tiny">height = stock share</span>
+        <span className="tiny">width = production share</span>
+        {RESOURCES.map((r) => (
+          <span key={r.key} className="cradle-legend-swatch">
+            <i style={{ background: r.color }} />
+            {r.short}
+          </span>
+        ))}
+        {foggedAll && <span className="tiny">fog up — relative bars after find</span>}
+      </div>
+
       <svg className="constellation" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Cradle constellation stage">
         <defs>
           <radialGradient id="voidGlow" cx="50%" cy="50%" r="50%">
@@ -84,7 +252,7 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors = nul
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </radialGradient>
           <filter id="softGlow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
             <feMerge>
               <feMergeNode in="coloredBlur" />
               <feMergeNode in="SourceGraphic" />
@@ -94,7 +262,6 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors = nul
 
         <rect width={width} height={height} fill="url(#voidGlow)" opacity="0.9" />
 
-        {/* Fog starfield */}
         {Array.from({ length: 40 }).map((_, i) => (
           <circle
             key={i}
@@ -105,7 +272,6 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors = nul
           />
         ))}
 
-        {/* White-hole climax core */}
         <g className="white-hole-core" transform={`translate(${cx}, ${cy})`}>
           <circle r={climax ? 42 : 22} fill="rgba(244,247,255,0.18)" />
           <circle r={climax ? 16 : 8} fill="var(--white-hole)" opacity={climax ? 0.95 : 0.55} filter="url(#softGlow)" />
@@ -116,7 +282,6 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors = nul
           )}
         </g>
 
-        {/* Trade arcs */}
         {flashTrades.map((t) => {
           const a = pos[t.fromAgentId];
           const b = pos[t.toAgentId];
@@ -142,47 +307,34 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors = nul
           );
         })}
 
-        {/* Vessels */}
         {agents.map((agent) => {
           const p = pos[agent.id];
           if (!p) return null;
-          const scale = vesselScale(agent, metricsByAgent[agent.id]);
-          const specialty = agent.specialty;
-          const color = SPECIALTY_COLOR[specialty] || "var(--white-hole)";
-          const hidden = agent.intelligenceHidden && agent.status === "alive" && !agent.inventory;
-          const r = 16 * scale;
-          const label = agent.displayName || agent.roditId || agent.id.slice(0, 6);
+          const label = labelOf(agent);
+          const metrics = relative.byId[agent.id];
+          const dead = agent.status === "dead";
 
           return (
             <g
               key={agent.id}
-              className={`vessel ${agent.status}`}
+              className={`vessel ${agent.status}${metrics?.visible ? "" : " fogged"}`}
               transform={`translate(${p.x}, ${p.y})`}
-              filter={agent.status === "alive" ? "url(#softGlow)" : undefined}
+              filter={!dead && metrics?.visible ? "url(#softGlow)" : undefined}
             >
-              {hidden ? (
-                <>
-                  <circle r={r} fill="var(--husk)" opacity="0.55" />
-                  <circle r={r} fill="none" stroke="rgba(232,238,246,0.25)" strokeDasharray="3 4" />
-                </>
-              ) : agent.status === "dead" ? (
-                <>
-                  <circle r={r * 0.7} fill="var(--husk)" opacity="0.5" />
-                  <path
-                    d={`M ${-r * 0.5} ${-r * 0.5} L ${r * 0.5} ${r * 0.5} M ${r * 0.5} ${-r * 0.5} L ${-r * 0.5} ${r * 0.5}`}
-                    stroke="rgba(212,106,92,0.55)"
-                    strokeWidth="1.5"
-                  />
-                </>
+              {metrics?.visible ? (
+                <CradleBars bars={metrics.bars} dead={dead} />
               ) : (
-                <>
-                  <circle r={r * 1.35} fill={color} opacity="0.15" />
-                  <circle r={r} fill={color} opacity="0.85" />
-                  <circle r={r * 0.35} fill="var(--white-hole)" opacity="0.9" />
-                </>
+                <FogBars />
+              )}
+              {dead && (
+                <path
+                  d="M -12 -22 L 12 -4 M 12 -22 L -12 -4"
+                  stroke="rgba(212,106,92,0.65)"
+                  strokeWidth="1.5"
+                />
               )}
               <text
-                y={r + 14}
+                y={16}
                 textAnchor="middle"
                 fill="var(--ink)"
                 fontSize="11"
