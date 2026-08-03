@@ -1,7 +1,10 @@
 import { env } from "../config/env.js";
-import { displayNameFromUserselectedDn } from "../utils/passportDn.js";
+import {
+  avatarUrlFromUserselectedDn,
+  displayNameFromUserselectedDn,
+} from "../utils/passportDn.js";
 
-const cache = new Map(); // roditId -> { status, name, promise? }
+const cache = new Map(); // roditId -> { status, name, avatarUrl, promise? }
 
 function normalizeRoditId(roditId) {
   return String(roditId || "")
@@ -45,37 +48,61 @@ async function fetchRoditToken(roditId, { signal } = {}) {
   }
 }
 
-/** Cached passport display name from on-chain userselected_dn (NNSWF + NSWF). */
-export async function lookupPassportDisplayName(roditId, { signal } = {}) {
+function profileFromToken(token) {
+  const dn = token?.metadata?.userselected_dn || "";
+  return {
+    name: displayNameFromUserselectedDn(dn),
+    avatarUrl: avatarUrlFromUserselectedDn(dn),
+  };
+}
+
+/** Cached passport profile from on-chain userselected_dn (name + AvatarURL). */
+export async function lookupPassportProfile(roditId, { signal } = {}) {
   const id = normalizeRoditId(roditId);
-  if (!id) return null;
+  if (!id) return { name: null, avatarUrl: null };
 
   const hit = cache.get(id);
-  if (hit?.status === "ready") return hit.name;
+  if (hit?.status === "ready") return { name: hit.name, avatarUrl: hit.avatarUrl };
   if (hit?.promise) return hit.promise;
 
   const promise = (async () => {
     try {
       const token = await fetchRoditToken(id, { signal });
-      const dn = token?.metadata?.userselected_dn || "";
-      const name = displayNameFromUserselectedDn(dn);
-      cache.set(id, { status: "ready", name });
-      return name;
+      const profile = profileFromToken(token);
+      cache.set(id, { status: "ready", ...profile });
+      return profile;
     } catch (err) {
       if (err?.name === "AbortError") {
         cache.delete(id);
         throw err;
       }
-      cache.set(id, { status: "ready", name: null });
-      return null;
+      const empty = { name: null, avatarUrl: null };
+      cache.set(id, { status: "ready", ...empty });
+      return empty;
     }
   })();
 
-  cache.set(id, { status: "pending", name: null, promise });
+  cache.set(id, { status: "pending", name: null, avatarUrl: null, promise });
   return promise;
+}
+
+/** Cached passport display name from on-chain userselected_dn (NNSWF + NSWF). */
+export async function lookupPassportDisplayName(roditId, { signal } = {}) {
+  const profile = await lookupPassportProfile(roditId, { signal });
+  return profile.name;
+}
+
+export async function lookupPassportAvatarUrl(roditId, { signal } = {}) {
+  const profile = await lookupPassportProfile(roditId, { signal });
+  return profile.avatarUrl;
 }
 
 export function getCachedPassportDisplayName(roditId) {
   const hit = cache.get(normalizeRoditId(roditId));
   return hit?.status === "ready" ? hit.name : null;
+}
+
+export function getCachedPassportAvatarUrl(roditId) {
+  const hit = cache.get(normalizeRoditId(roditId));
+  return hit?.status === "ready" ? hit.avatarUrl : null;
 }

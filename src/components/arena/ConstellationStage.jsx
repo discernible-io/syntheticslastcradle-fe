@@ -1,5 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAgentLabels } from "../../hooks/useAgentLabels.js";
+
+const STAGE_MIN = 160;
+const STAGE_MAX_VH = 0.7;
 
 const RESOURCES = [
   { key: "energy", color: "var(--energy)", short: "E" },
@@ -15,6 +18,11 @@ const BAR = {
   gap: 4,
   fogHeight: 28,
   fogWidth: 10,
+};
+
+const AVATAR = {
+  r: 16,
+  y: -(BAR.maxHeight + 22),
 };
 
 function layoutPositions(agents, width, height) {
@@ -201,10 +209,20 @@ function FogBars() {
   );
 }
 
+function clampStageHeight(px) {
+  const max = Math.round(window.innerHeight * STAGE_MAX_VH);
+  return Math.min(max, Math.max(STAGE_MIN, Math.round(px)));
+}
+
 export function ConstellationStage({ agents = [], flashTrades = [], honors: _honors = null, phase, turn }) {
   const width = 900;
   const height = 560;
-  const { labelOf } = useAgentLabels(agents);
+  const stageRef = useRef(null);
+  const dragRef = useRef(null);
+  const [stageHeight, setStageHeight] = useState(null);
+  const [resizing, setResizing] = useState(false);
+  const { labelOf, avatarOf } = useAgentLabels(agents);
+  const [brokenAvatars, setBrokenAvatars] = useState(() => new Set());
 
   const { pos, cx, cy } = useMemo(() => layoutPositions(agents, width, height), [agents]);
   const relative = useMemo(() => buildRelativeMetrics(agents), [agents]);
@@ -213,8 +231,49 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors: _hon
   const climax = livingCount <= 2 && agents.length > 0;
   const foggedAll = agents.length > 0 && relative.knownCount === 0;
 
+  useEffect(() => {
+    const onMove = (event) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const next = clampStageHeight(drag.startHeight + (event.clientY - drag.startY));
+      setStageHeight(next);
+    };
+    const onUp = () => {
+      if (!dragRef.current) return;
+      dragRef.current = null;
+      setResizing(false);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, []);
+
+  const startResize = (event) => {
+    const el = stageRef.current;
+    if (!el) return;
+    event.preventDefault();
+    dragRef.current = {
+      startY: event.clientY,
+      startHeight: el.getBoundingClientRect().height,
+    };
+    setResizing(true);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+
   return (
-    <div className="panel arena-stage" style={{ padding: 0 }}>
+    <div
+      ref={stageRef}
+      className={`panel arena-stage${resizing ? " is-resizing" : ""}`}
+      style={{
+        padding: 0,
+        ...(stageHeight != null ? { "--arena-stage-height": `${stageHeight}px` } : null),
+      }}
+    >
       <div
         style={{
           position: "absolute",
@@ -258,6 +317,11 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors: _hon
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          {agents.map((agent) => (
+            <clipPath key={`avatar-clip-${agent.id}`} id={`avatar-clip-${agent.id}`}>
+              <circle cx="0" cy={AVATAR.y} r={AVATAR.r} />
+            </clipPath>
+          ))}
         </defs>
 
         <rect width={width} height={height} fill="url(#voidGlow)" opacity="0.9" />
@@ -313,6 +377,8 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors: _hon
           const label = labelOf(agent);
           const metrics = relative.byId[agent.id];
           const dead = agent.status === "dead";
+          const avatarUrl = avatarOf(agent);
+          const showAvatar = Boolean(avatarUrl) && !brokenAvatars.has(agent.id);
 
           return (
             <g
@@ -325,6 +391,37 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors: _hon
                 <CradleBars bars={metrics.bars} dead={dead} />
               ) : (
                 <FogBars />
+              )}
+              {showAvatar && (
+                <g className="vessel-avatar" opacity={dead ? 0.5 : 1}>
+                  <circle
+                    cx="0"
+                    cy={AVATAR.y}
+                    r={AVATAR.r + 1.5}
+                    fill="var(--void-2)"
+                    stroke={dead ? "rgba(212,106,92,0.55)" : "rgba(232,238,246,0.35)"}
+                    strokeWidth="1.25"
+                  />
+                  <image
+                    href={avatarUrl}
+                    x={-AVATAR.r}
+                    y={AVATAR.y - AVATAR.r}
+                    width={AVATAR.r * 2}
+                    height={AVATAR.r * 2}
+                    clipPath={`url(#avatar-clip-${agent.id})`}
+                    preserveAspectRatio="xMidYMid slice"
+                    onError={() => {
+                      setBrokenAvatars((prev) => {
+                        if (prev.has(agent.id)) return prev;
+                        const next = new Set(prev);
+                        next.add(agent.id);
+                        return next;
+                      });
+                    }}
+                  >
+                    <title>{label}</title>
+                  </image>
+                </g>
               )}
               {dead && (
                 <path
@@ -346,6 +443,14 @@ export function ConstellationStage({ agents = [], flashTrades = [], honors: _hon
           );
         })}
       </svg>
+
+      <div
+        className="arena-stage-resize"
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Resize constellation"
+        onPointerDown={startResize}
+      />
     </div>
   );
 }

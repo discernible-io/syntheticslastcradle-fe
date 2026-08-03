@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { lookupPassportDisplayName } from "../api/roditLookup.js";
+import { lookupPassportProfile } from "../api/roditLookup.js";
 import { agentLabel, agentLabelFromId } from "../utils/agentLabel.js";
 
 function roditKey(agents) {
@@ -11,15 +11,26 @@ function roditKey(agents) {
     .join(",");
 }
 
-/** Resolve spectator labels: passport NNSWF+NSWF when available, else joining id. */
+function roditIdOf(agentOrId, agents) {
+  if (agentOrId == null) return "";
+  if (typeof agentOrId === "string") {
+    const agent = agents.find((a) => a.id === agentOrId);
+    return agent?.roditId ? String(agent.roditId).toLowerCase() : "";
+  }
+  return agentOrId.roditId ? String(agentOrId.roditId).toLowerCase() : "";
+}
+
+/** Resolve spectator labels + RODiT AvatarURL portraits when available. */
 export function useAgentLabels(agents = []) {
   const key = roditKey(agents);
   const [passportNameByRodit, setPassportNameByRodit] = useState({});
+  const [avatarUrlByRodit, setAvatarUrlByRodit] = useState({});
 
   useEffect(() => {
     const ids = key ? key.split(",") : [];
     if (ids.length === 0) {
       setPassportNameByRodit({});
+      setAvatarUrlByRodit({});
       return undefined;
     }
     const ac = new AbortController();
@@ -27,16 +38,24 @@ export function useAgentLabels(agents = []) {
       const entries = await Promise.all(
         ids.map(async (id) => {
           try {
-            const name = await lookupPassportDisplayName(id, { signal: ac.signal });
-            return name ? [id, name] : null;
+            const profile = await lookupPassportProfile(id, { signal: ac.signal });
+            return [id, profile];
           } catch (err) {
             if (err?.name === "AbortError") return null;
-            return null;
+            return [id, { name: null, avatarUrl: null }];
           }
         }),
       );
       if (ac.signal.aborted) return;
-      setPassportNameByRodit(Object.fromEntries(entries.filter(Boolean)));
+      const names = {};
+      const avatars = {};
+      for (const entry of entries.filter(Boolean)) {
+        const [id, profile] = entry;
+        if (profile?.name) names[id] = profile.name;
+        if (profile?.avatarUrl) avatars[id] = profile.avatarUrl;
+      }
+      setPassportNameByRodit(names);
+      setAvatarUrlByRodit(avatars);
     })();
     return () => ac.abort();
   }, [key]);
@@ -49,6 +68,10 @@ export function useAgentLabels(agents = []) {
       }
       return agentLabel(agentOrId, passportNameByRodit);
     };
-    return { passportNameByRodit, labelOf };
-  }, [agents, passportNameByRodit]);
+    const avatarOf = (agentOrId) => {
+      const id = roditIdOf(agentOrId, agents);
+      return (id && avatarUrlByRodit[id]) || null;
+    };
+    return { passportNameByRodit, avatarUrlByRodit, labelOf, avatarOf };
+  }, [agents, passportNameByRodit, avatarUrlByRodit]);
 }

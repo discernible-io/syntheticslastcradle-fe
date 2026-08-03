@@ -9,6 +9,30 @@ function resourceBits(t) {
   return bits.length > 0 ? bits : <span className="muted">—</span>;
 }
 
+function pairKey(a, b) {
+  return a < b ? `${a}::${b}` : `${b}::${a}`;
+}
+
+/** Group transfers so mutual pairs (A→B and B→A) sit together. */
+function groupTransfers(edges) {
+  const order = [];
+  const groups = new Map();
+  for (const e of edges) {
+    const key = pairKey(e.fromName, e.toName);
+    if (!groups.has(key)) {
+      groups.set(key, []);
+      order.push(key);
+    }
+    groups.get(key).push(e);
+  }
+  return order.map((key) => {
+    const items = groups.get(key);
+    const dirs = new Set(items.map((e) => `${e.fromName}->${e.toName}`));
+    const mutual = dirs.size > 1;
+    return { key, items, mutual };
+  });
+}
+
 export function TurnRecapView({ report, gameId }) {
   if (!report) return null;
   return (
@@ -53,14 +77,28 @@ export function TurnRecapView({ report, gameId }) {
         <TradeGraph edges={report.edges} />
         {report.edges.length > 0 && (
           <div className="transfer-list">
-            {report.edges.map((e) => (
-              <div key={e.id} className="transfer-row">
-                <span>
-                  <strong>{e.fromName}</strong>
-                  <span className="muted"> → </span>
-                  <strong>{e.toName}</strong>
-                </span>
-                <span className="transfer-resources">{resourceBits(e)}</span>
+            {groupTransfers(report.edges).map((group) => (
+              <div
+                key={group.key}
+                className={group.mutual ? "transfer-group is-mutual" : "transfer-group"}
+              >
+                {group.mutual && (
+                  <div className="transfer-group-label">
+                    Mutual · {group.items[0].fromName} ⇄ {group.items[0].toName}
+                  </div>
+                )}
+                {group.items.map((e) => (
+                  <div key={e.id} className="transfer-row">
+                    <span className="transfer-direction">
+                      <strong>{e.fromName}</strong>
+                      <span className="transfer-arrow" aria-hidden="true">
+                        →
+                      </span>
+                      <strong>{e.toName}</strong>
+                    </span>
+                    <span className="transfer-resources">{resourceBits(e)}</span>
+                  </div>
+                ))}
               </div>
             ))}
           </div>

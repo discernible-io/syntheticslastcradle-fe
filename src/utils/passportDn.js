@@ -57,6 +57,7 @@ export function parseUserselectedDn(rawDn) {
   return {
     NNSWF: find("NNSWF"),
     NSWF: find("NSWF"),
+    AvatarURL: find("AvatarURL"),
     attributes,
   };
 }
@@ -66,4 +67,17 @@ export function displayNameFromUserselectedDn(rawDn) {
   const { NNSWF, NSWF } = parseUserselectedDn(rawDn);
   const parts = [NNSWF, NSWF].filter(Boolean);
   return parts.length > 0 ? parts.join(" ").trim() : null;
+}
+
+/** http(s) AvatarURL from the DN, or null if missing/invalid. */
+export function avatarUrlFromUserselectedDn(rawDn) {
+  const { AvatarURL } = parseUserselectedDn(rawDn);
+  if (!AvatarURL) return null;
+  try {
+    const url = new URL(AvatarURL);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.href;
+  } catch {
+    return null;
+  }
 }

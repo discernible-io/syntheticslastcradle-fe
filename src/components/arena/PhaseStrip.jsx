@@ -29,15 +29,14 @@ function fmt(ms) {
 const STEPS = [
   { id: "negotiation", label: "Negotiation" },
   { id: "execution", label: "Execution" },
-  { id: "resolve", label: "Resolve" },
 ];
 
 function normalizePhase(phase) {
   if (!phase) return null;
   const p = String(phase).toLowerCase();
   if (p.includes("negot")) return "negotiation";
-  if (p.includes("exec")) return "execution";
-  if (p.includes("resol") || p.includes("advance")) return "resolve";
+  // Resolve/advance are instantaneous — fold into Execution.
+  if (p.includes("exec") || p.includes("resol") || p.includes("advance")) return "execution";
   return p;
 }
 
@@ -57,7 +56,7 @@ export function PhaseStrip({ game }) {
       {STEPS.map((step) => {
         const active =
           status === "finished"
-            ? step.id === "resolve"
+            ? step.id === "execution"
             : phase === step.id || (status === "running" && !phase && step.id === "negotiation");
         return (
           <div key={step.id} className={`phase-step${active ? " active" : ""}`}>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { IdentityChip } from "../layout/IdentityChip.jsx";
 import { useAgentLabels } from "../../hooks/useAgentLabels.js";
 
@@ -13,7 +14,8 @@ function initials(name) {
 
 export function DispatchFeed({ messages = [], agents = [], turn }) {
   const byId = Object.fromEntries(agents.map((a) => [a.id, a]));
-  const { labelOf } = useAgentLabels(agents);
+  const { labelOf, avatarOf } = useAgentLabels(agents);
+  const [brokenAvatars, setBrokenAvatars] = useState(() => new Set());
 
   return (
     <div className="panel dispatch">
@@ -27,11 +29,28 @@ export function DispatchFeed({ messages = [], agents = [], turn }) {
           const agentId = m.from_agent_id || m.fromAgentId;
           const agent = byId[agentId];
           const name = labelOf(agent || agentId);
+          const avatarUrl = avatarOf(agent || agentId);
+          const showAvatar = Boolean(avatarUrl) && !brokenAvatars.has(agentId);
           const ts = m.created_at || m.createdAt;
           return (
             <article key={m.id} className="dispatch-item">
               <div className="dispatch-avatar" style={{ color: "var(--water)" }}>
-                {initials(name)}
+                {showAvatar ? (
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    onError={() => {
+                      setBrokenAvatars((prev) => {
+                        if (prev.has(agentId)) return prev;
+                        const next = new Set(prev);
+                        next.add(agentId);
+                        return next;
+                      });
+                    }}
+                  />
+                ) : (
+                  initials(name)
+                )}
               </div>
               <div className="dispatch-meta">
                 <span className="name">{name}</span>
