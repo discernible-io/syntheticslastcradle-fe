@@ -36,7 +36,7 @@ export function WatchLobbyPage() {
       <NarrativeChrome narrative={narrative} compact />
       <h1 style={{ fontSize: "1.75rem", marginBottom: "0.35rem" }}>Live Arena</h1>
       <p className="muted" style={{ marginTop: 0, marginBottom: "1.25rem" }}>
-        Twitch without video — constellation stage, dispatch, and trade motion.
+        Cradles stage, dispatch, and trade motion.
       </p>
       {error && <div className="error-banner">{error}</div>}
       {loading && <div className="muted">Loading contests…</div>}

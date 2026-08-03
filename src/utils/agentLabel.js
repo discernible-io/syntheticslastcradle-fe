@@ -43,3 +43,39 @@ export function agentLabelFromId(agentId, agents = [], passportNameByRodit = {})
   const agent = byId[agentId] || { id: agentId };
   return agentLabel(agent, passportNameByRodit);
 }
+
+/** Initials from a display name (e.g. "Cornelius Drew" → "CD"). */
+export function nameInitials(name, maxParts = 2) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, maxParts);
+  if (!parts.length) return "?";
+  return parts
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
+}
+
+/**
+ * Compact participant marks for lobby rows.
+ * Prefer passport / real names; fall back to rodit short marks, never bare ULIDs.
+ */
+export function participantInitials(agents = [], passportNameByRodit = {}) {
+  return (agents || [])
+    .map((agent) => {
+      const roditKey = agent?.roditId ? String(agent.roditId).toLowerCase() : "";
+      const passportName =
+        (roditKey && passportNameByRodit[roditKey]) ||
+        (agent?.roditId && passportNameByRodit[agent.roditId]) ||
+        null;
+      if (passportName) return nameInitials(passportName);
+      if (agent?.displayName && !isJunkDisplayName(agent.displayName, agent.roditId)) {
+        return nameInitials(agent.displayName);
+      }
+      if (agent?.roditId) return String(agent.roditId).slice(0, 2).toUpperCase();
+      return null;
+    })
+    .filter(Boolean);
+}
