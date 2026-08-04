@@ -397,6 +397,11 @@ select {
     max-height: none;
     overflow: visible;
   }
+  .dispatch {
+    min-height: 240px;
+    max-height: 480px;
+    flex: none;
+  }
   .arena-bottom {
     grid-template-columns: 1fr;
   }
@@ -630,6 +635,7 @@ select {
   align-items: stretch;
   gap: 0;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .phase-step {
@@ -663,8 +669,9 @@ select {
 .dispatch {
   display: flex;
   flex-direction: column;
-  min-height: 240px;
-  max-height: 480px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
 }
 
 .dispatch-header,
@@ -772,6 +779,7 @@ select {
 
 .survival-pressure {
   padding: 0.75rem;
+  flex-shrink: 0;
 }
 
 .pressure-meter {
