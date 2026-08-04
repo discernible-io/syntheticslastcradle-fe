@@ -3,6 +3,7 @@
  * Optional future API: GET .../turn-report?turn=N
  */
 import { agentLabel, agentLabelFromId } from "../utils/agentLabel.js";
+import { eliminationCause } from "../utils/elimination.js";
 
 export function buildTurnReport({
   turn,
@@ -76,7 +77,7 @@ export function buildTurnReport({
     eliminations: eliminatedThisTurn.map((a) => ({
       id: a.id,
       name: agentLabel(a, passportNameByRodit),
-      cause: "Couldn’t pay survival",
+      cause: eliminationCause(a),
       diedAtTurn: a.diedAtTurn,
     })),
     livingCount: living.length,

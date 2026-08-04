@@ -211,6 +211,12 @@ select {
   border-color: rgba(232, 160, 60, 0.4);
 }
 
+.tag.white-hole {
+  border-color: rgba(244, 247, 255, 0.55);
+  color: var(--white-hole);
+  background: rgba(244, 247, 255, 0.08);
+}
+
 .resource-energy { color: var(--energy); }
 .resource-water { color: var(--water); }
 .resource-compute { color: var(--compute); }
@@ -316,6 +322,10 @@ select {
   height: var(--arena-stage-height);
   min-height: 160px;
   max-height: 70vh;
+}
+
+.arena-stage.is-finished {
+  --arena-stage-height: min(48vh, 420px);
 }
 
 .arena-stage.is-resizing {
@@ -439,7 +449,24 @@ select {
 }
 
 .constellation .vessel.dead {
-  opacity: 0.4;
+  opacity: 0.72;
+}
+
+.constellation .vessel.dead .cradle-bars,
+.constellation .vessel.dead .vessel-avatar {
+  opacity: 0.55;
+}
+
+.constellation .vessel.dead .vessel-name {
+  fill: var(--ink-dim);
+}
+
+.constellation .vessel.just-passed .vessel-memorial {
+  animation: memorial-glow 2.4s ease-in-out infinite;
+}
+
+.constellation .vessel.just-passed .vessel-epitaph text:first-child {
+  fill: var(--danger);
 }
 
 .constellation .vessel.fogged {
@@ -460,6 +487,14 @@ select {
   animation: pulse-core 5s ease-in-out infinite;
 }
 
+.constellation .white-hole-core.ignited {
+  animation: pulse-core 2.8s ease-in-out infinite;
+}
+
+.constellation .vessel.honoree .vessel-honor-ring {
+  animation: honor-ring 3.2s ease-in-out infinite;
+}
+
 .constellation .trade-arc {
   stroke-dasharray: 6 8;
   animation: dash-flow 1.2s linear infinite;
@@ -475,10 +510,119 @@ select {
   }
 }
 
+@keyframes memorial-glow {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes honor-ring {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 @keyframes dash-flow {
   to {
     stroke-dashoffset: -28;
   }
+}
+
+/* Finish banner — entropy reversed / White Hole Anchor */
+.restart-finale {
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 1.1rem;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0.7rem 0.85rem;
+  background: linear-gradient(180deg, rgba(8, 14, 24, 0.55), rgba(8, 14, 24, 0.88));
+  border: 1px solid rgba(244, 247, 255, 0.22);
+  backdrop-filter: blur(10px);
+  animation: rise-in 0.7s ease-out both;
+  pointer-events: none;
+}
+
+.restart-finale-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--water);
+  font-family: var(--font-body);
+}
+
+.restart-finale-title {
+  margin: 0.1rem 0 0.25rem;
+  font-size: 1.15rem;
+  font-family: var(--font-display);
+  color: var(--white-hole);
+  letter-spacing: -0.02em;
+}
+
+.restart-finale-blurb {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+
+.restart-finale-waiting {
+  margin: 0;
+  align-self: center;
+}
+
+.restart-honorees {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 11rem;
+}
+
+.restart-honorees li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  padding-left: 0.55rem;
+  border-left: 2px solid rgba(62, 200, 214, 0.45);
+}
+
+.restart-honorees li.anchor {
+  border-left-color: rgba(244, 247, 255, 0.7);
+}
+
+.restart-honor-title {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--water);
+  font-family: var(--font-display);
+}
+
+.restart-honorees li.anchor .restart-honor-title {
+  color: var(--white-hole);
+}
+
+.restart-honor-name {
+  font-size: 0.9rem;
+  color: var(--ink);
 }
 
 .phase-strip {
@@ -672,6 +816,17 @@ select {
   color: var(--danger);
 }
 
+.cradle-afford .chip.honor-anchor {
+  border-color: rgba(244, 247, 255, 0.55);
+  color: var(--white-hole);
+  background: rgba(244, 247, 255, 0.06);
+}
+
+.cradle-afford .chip.honor-co {
+  border-color: rgba(62, 200, 214, 0.5);
+  color: var(--water);
+}
+
 .identity-chip {
   display: inline-flex;
   align-items: center;
@@ -773,6 +928,12 @@ select {
   .trade-graph-flow {
     animation: none;
     stroke-dasharray: none;
+  }
+
+  .restart-finale,
+  .constellation .white-hole-core.ignited,
+  .constellation .vessel.honoree .vessel-honor-ring {
+    animation: none;
   }
 }
 

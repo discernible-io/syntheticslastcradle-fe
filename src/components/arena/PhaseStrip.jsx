@@ -62,14 +62,18 @@ export function PhaseStrip({ game }) {
           <div key={step.id} className={`phase-step${active ? " active" : ""}`}>
             <div className="label">{step.label}</div>
             <div className="countdown">
-              {active && status === "running" ? fmt(left) : active && status === "finished" ? "done" : ""}
+              {active && status === "running" ? fmt(left) : active && status === "finished" ? "restart" : ""}
             </div>
           </div>
         );
       })}
       <div className="phase-step" style={{ flex: "0 0 auto", opacity: 1, minWidth: "7rem" }}>
-        <div className="label">Cycle</div>
-        <div className="countdown">{game?.currentTurn ?? "—"} / 55</div>
+        <div className="label">{status === "finished" ? "Restart" : "Cycle"}</div>
+        <div className="countdown">
+          {status === "finished"
+            ? `Cycle ${game?.currentTurn ?? "—"}`
+            : `${game?.currentTurn ?? "—"} / 55`}
+        </div>
       </div>
     </div>
   );

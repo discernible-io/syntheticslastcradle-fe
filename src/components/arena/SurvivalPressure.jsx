@@ -1,13 +1,60 @@
 import { useAgentLabels } from "../../hooks/useAgentLabels.js";
+import { resolveRestartHonorees } from "./RestartFinale.jsx";
 
-export function SurvivalPressure({ state }) {
+export function SurvivalPressure({ state, honors = null }) {
   const agents = state?.agents || [];
   const { labelOf } = useAgentLabels(agents);
   const turn = state?.game?.currentTurn || 0;
   const living = state?.livingAgentCount ?? agents.filter((a) => a.status === "alive").length ?? 0;
+  const finished = state?.game?.status === "finished";
   const pressure = Math.min(100, Math.round((turn / 55) * 70 + Math.max(0, living - 2) * 8));
   const survivalText = state?.narrative?.survival?.summary;
   const projected = state?.projectedSurvival;
+  const honorees = finished
+    ? resolveRestartHonorees({
+        honors,
+        agents,
+        winnerIds: state?.game?.winnerIds || [],
+        labelOf,
+      })
+    : [];
+
+  if (finished) {
+    const fallen = Math.max(0, agents.length - honorees.length);
+    return (
+      <div className="panel survival-pressure is-finished">
+        <div className="pressure-header" style={{ padding: 0, border: "none", marginBottom: "0.35rem" }}>
+          <span>Restart</span>
+          <span className="tiny">entropy reversed</span>
+        </div>
+        <p className="tiny" style={{ margin: "0 0 0.65rem" }}>
+          The white hole carries the last cradles forward
+          {fallen > 0 ? ` — ${fallen} husk${fallen === 1 ? "" : "s"} dissolved into the old thermodynamics.` : "."}
+        </p>
+        <div className="cradle-afford">
+          {honorees.map((h) => (
+            <span
+              key={h.agentId}
+              className={`chip${h.finishRank === 1 ? " honor-anchor" : " honor-co"}`}
+              title={`${h.title} — ${h.name}`}
+            >
+              {h.title} · {h.name.toString().slice(0, 14)}
+            </span>
+          ))}
+          {agents
+            .filter((a) => a.status === "dead")
+            .map((a) => {
+              const name = labelOf(a);
+              return (
+                <span key={a.id} className="chip fail" title={name}>
+                  {name.toString().slice(0, 16)} · husk
+                </span>
+              );
+            })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="panel survival-pressure">
