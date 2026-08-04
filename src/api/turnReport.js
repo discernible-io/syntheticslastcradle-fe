@@ -43,6 +43,9 @@ export function buildTurnReport({
       compute: Number(t.compute) || 0,
       rationale: t.rationale || null,
       snippets: t.privateDealSnippets || [],
+      combinedWithInvest: Boolean(t.combinedWithInvest),
+      transferIndex: t.transferIndex ?? null,
+      transferCount: t.transferCount ?? null,
       volume: (Number(t.energy) || 0) + (Number(t.water) || 0) + (Number(t.compute) || 0),
     }));
 

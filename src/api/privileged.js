@@ -33,13 +33,28 @@ async function privilegedFetch(path, { method = "GET", body, signal, jwt } = {})
   }
 
   if (!res.ok) {
-    const msg =
+    const code = data?.error?.code;
+    let msg =
       data?.error?.message ||
       data?.message ||
       (typeof data?.raw === "string" ? data.raw : "") ||
       res.statusText;
+    if (code === "OPEN_LOBBY_AVAILABLE") {
+      const open = data?.error?.details?.openLobbies;
+      const ids = Array.isArray(open)
+        ? open
+            .map((g) => g?.id || g?.gameId)
+            .filter(Boolean)
+            .slice(0, 5)
+            .join(", ")
+        : "";
+      msg = ids
+        ? `Open lobby still has seats (${ids}). Join that lobby instead of creating another.`
+        : "An open casual lobby still has seats — join it instead of creating another.";
+    }
     const err = new Error(`${method} ${path} → ${res.status}: ${msg}`);
     err.status = res.status;
+    err.code = code;
     err.data = data;
     throw err;
   }

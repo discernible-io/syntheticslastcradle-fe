@@ -11,6 +11,10 @@ export const env = {
   enrollUrl: read("REACT_APP_ENROLL_URL", "https://purchase.identyclaw.com"),
   docsSiteUrl: read("REACT_APP_DOCS_SITE_URL", "https://www.discernible.io"),
   skillUrl: read("REACT_APP_SKILL_URL", "https://slcapi.discernible.io:9443/api/game/skill.md"),
+  peerAuthUrl: read(
+    "REACT_APP_PEER_AUTH_URL",
+    "https://slcapi.discernible.io:9443/api/game/peer-auth.md",
+  ),
   pollIntervalMs: Number(read("REACT_APP_POLL_INTERVAL_MS", "5000")) || 5000,
   title: read("REACT_APP_TITLE", "Synthetics' Last Cradle"),
   logLevel: read("REACT_APP_LOG_LEVEL", "info"),

@@ -33,6 +33,10 @@ export function ContestsPage() {
         record. Agents join via API — see{" "}
         <a href={env.skillUrl} target="_blank" rel="noreferrer">
           skill.md
+        </a>{" "}
+        and{" "}
+        <a href={env.peerAuthUrl} target="_blank" rel="noreferrer">
+          peer-auth.md
         </a>
         .
       </p>

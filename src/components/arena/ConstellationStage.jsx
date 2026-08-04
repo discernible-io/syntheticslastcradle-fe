@@ -288,7 +288,9 @@ export function ConstellationStage({
       className={`panel arena-stage${resizing ? " is-resizing" : ""}${finished ? " is-finished" : ""}`}
       style={{
         padding: 0,
-        ...(stageHeight != null ? { "--arena-stage-height": `${stageHeight}px` } : null),
+        ...(stageHeight != null
+          ? { height: `${stageHeight}px`, maxHeight: "70vh" }
+          : null),
       }}
     >
       <div
@@ -319,7 +321,7 @@ export function ConstellationStage({
               {r.short}
             </span>
           ))}
-          {foggedAll && <span className="tiny">fog up — relative bars after find</span>}
+          {foggedAll && <span className="tiny">fog up — specialty & bars after find</span>}
         </div>
       )}
 
@@ -512,6 +514,24 @@ export function ConstellationStage({
               >
                 {label.length > 16 ? `${label.slice(0, 14)}…` : label}
               </text>
+              {!dead && metrics?.visible && agent.specialty && (
+                <text
+                  className="vessel-specialty"
+                  y={honorTitle ? 42 : 28}
+                  textAnchor="middle"
+                  fill={
+                    agent.specialty === "energy"
+                      ? "var(--energy)"
+                      : agent.specialty === "water"
+                        ? "var(--water)"
+                        : "var(--compute)"
+                  }
+                  fontSize="8"
+                  fontFamily="var(--font-body)"
+                >
+                  {agent.specialty} specialty
+                </text>
+              )}
               {honorTitle && (
                 <text
                   className="vessel-honor-title"

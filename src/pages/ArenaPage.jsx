@@ -11,7 +11,17 @@ import { useEffect, useState } from "react";
 
 export function ArenaPage() {
   const { gameId } = useParams();
-  const { state, messages, trades, flashTrades, loading, error, sseConnected, refresh } = useArenaData(gameId);
+  const {
+    state,
+    messages,
+    trades,
+    tradesTurn,
+    flashTrades,
+    loading,
+    error,
+    sseConnected,
+    refresh,
+  } = useArenaData(gameId);
   const [honors, setHonors] = useState(null);
 
   useEffect(() => {
@@ -52,6 +62,15 @@ export function ArenaPage() {
             Turn recap
           </Link>
         )}
+        {tradesTurn != null && tradesTurn !== turn && (
+          <Link
+            className="btn btn-ghost"
+            style={{ padding: "0.25rem 0.55rem" }}
+            to={`/watch/${gameId}/turn/${tradesTurn}`}
+          >
+            Last settle · {tradesTurn}
+          </Link>
+        )}
       </div>
 
       {error && (
@@ -63,6 +82,13 @@ export function ArenaPage() {
 
       {state && (
         <div className={`arena${finished ? " arena-finished" : ""}`}>
+          <div className="arena-phases">
+            <PhaseStrip game={state.game} />
+            <SurvivalPressure state={state} honors={honors} />
+          </div>
+          <div className="arena-dispatch">
+            <DispatchFeed messages={messages} agents={state.agents || []} turn={turn} />
+          </div>
           <ConstellationStage
             agents={state.agents || []}
             flashTrades={flashTrades}
@@ -73,13 +99,8 @@ export function ArenaPage() {
             winnerIds={state.game?.winnerIds || []}
             finishReason={state.game?.finishReason || honors?.finishReason}
           />
-          <div className="arena-side">
-            <PhaseStrip game={state.game} />
-            <SurvivalPressure state={state} honors={honors} />
-            <DispatchFeed messages={messages} agents={state.agents || []} turn={turn} />
-          </div>
           <div className="arena-bottom">
-            <TradeTicker trades={trades} agents={state.agents || []} />
+            <TradeTicker trades={trades} agents={state.agents || []} tradesTurn={tradesTurn} />
             <OperatorCommentary gameId={gameId} turn={turn || 0} />
           </div>
         </div>

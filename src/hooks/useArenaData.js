@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getGameState, getMessages, getTrades } from "../api/client.js";
 import { env } from "../config/env.js";
+import { publicTradesTurn } from "../utils/tradeTurn.js";
 import { useGameEvents } from "./useGameEvents.js";
 
 export function useArenaData(gameId) {
   const [state, setState] = useState(null);
   const [messages, setMessages] = useState([]);
   const [trades, setTrades] = useState([]);
+  const [tradesTurn, setTradesTurn] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [flashTrades, setFlashTrades] = useState([]);
@@ -20,14 +22,16 @@ export function useArenaData(gameId) {
     try {
       const nextState = await getGameState(gameId, { signal: ac.signal });
       const turn = nextState?.game?.currentTurn;
+      const ledgerTurn = publicTradesTurn(nextState?.game);
       const [msgRes, tradeRes] = await Promise.all([
         getMessages(gameId, turn, { signal: ac.signal }).catch(() => ({ messages: [] })),
-        getTrades(gameId, turn, { signal: ac.signal }).catch(() => ({ trades: [] })),
+        getTrades(gameId, ledgerTurn, { signal: ac.signal }).catch(() => ({ trades: [] })),
       ]);
       if (ac.signal.aborted) return;
       setState(nextState);
       setMessages(msgRes.messages || []);
       setTrades(tradeRes.trades || []);
+      setTradesTurn(tradeRes.turnNumber ?? ledgerTurn);
       setError(null);
     } catch (err) {
       if (err.name === "AbortError") return;
@@ -68,6 +72,7 @@ export function useArenaData(gameId) {
     state,
     messages,
     trades,
+    tradesTurn,
     flashTrades,
     loading,
     error: error || sseError,

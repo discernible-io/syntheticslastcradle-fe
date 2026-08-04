@@ -88,15 +88,38 @@ export function TurnRecapView({ report, gameId }) {
                   </div>
                 )}
                 {group.items.map((e) => (
-                  <div key={e.id} className="transfer-row">
-                    <span className="transfer-direction">
-                      <strong>{e.fromName}</strong>
-                      <span className="transfer-arrow" aria-hidden="true">
-                        →
+                  <div key={e.id} className="transfer-row-block">
+                    <div className="transfer-row">
+                      <span className="transfer-direction">
+                        <strong>{e.fromName}</strong>
+                        <span className="transfer-arrow" aria-hidden="true">
+                          →
+                        </span>
+                        <strong>{e.toName}</strong>
+                        {e.combinedWithInvest && <span className="tag">+invest</span>}
+                        {e.transferCount > 1 && (
+                          <span className="tiny">
+                            leg {(e.transferIndex ?? 0) + 1}/{e.transferCount}
+                          </span>
+                        )}
                       </span>
-                      <strong>{e.toName}</strong>
-                    </span>
-                    <span className="transfer-resources">{resourceBits(e)}</span>
+                      <span className="transfer-resources">{resourceBits(e)}</span>
+                    </div>
+                    {e.rationale && <p className="transfer-rationale">“{e.rationale}”</p>}
+                    {e.snippets?.length > 0 && (
+                      <div className="deal-snippets">
+                        {e.snippets.slice(0, 5).map((s, i) => (
+                          <div key={i} className="deal-snippet">
+                            <span className="deal-snippet-meta">
+                              {s.taskType || "deal"}
+                              {s.channel ? ` · ${s.channel}` : ""}
+                              {s.holaVerified ? " · HOLA attested" : ""}
+                            </span>
+                            <span className="deal-snippet-excerpt">“{s.excerpt}”</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
