@@ -1,10 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAgentLabels } from "../../hooks/useAgentLabels.js";
 import { eliminationCause } from "../../utils/elimination.js";
 import { honorTitleByAgentId, RestartFinale, resolveRestartHonorees } from "./RestartFinale.jsx";
-
-const STAGE_MIN = 160;
-const STAGE_MAX_VH = 0.7;
 
 const AVATAR = {
   r: 32,
@@ -36,11 +33,6 @@ function layoutPositions(agents, width, height) {
     };
   });
   return { pos, cx, cy };
-}
-
-function clampStageHeight(px) {
-  const max = Math.round(window.innerHeight * STAGE_MAX_VH);
-  return Math.min(max, Math.max(STAGE_MIN, Math.round(px)));
 }
 
 function truncateLabel(value, max = 24) {
@@ -136,10 +128,6 @@ export function ConstellationStage({
 }) {
   const width = 900;
   const height = 560;
-  const stageRef = useRef(null);
-  const dragRef = useRef(null);
-  const [stageHeight, setStageHeight] = useState(null);
-  const [resizing, setResizing] = useState(false);
   const { labelOf, avatarOf, contactOf } = useAgentLabels(agents);
   const [brokenAvatars, setBrokenAvatars] = useState(() => new Set());
 
@@ -154,50 +142,10 @@ export function ConstellationStage({
   );
   const titlesById = useMemo(() => honorTitleByAgentId(honorees), [honorees]);
 
-  useEffect(() => {
-    const onMove = (event) => {
-      const drag = dragRef.current;
-      if (!drag) return;
-      const next = clampStageHeight(drag.startHeight + (event.clientY - drag.startY));
-      setStageHeight(next);
-    };
-    const onUp = () => {
-      if (!dragRef.current) return;
-      dragRef.current = null;
-      setResizing(false);
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    };
-  }, []);
-
-  const startResize = (event) => {
-    const el = stageRef.current;
-    if (!el) return;
-    event.preventDefault();
-    dragRef.current = {
-      startY: event.clientY,
-      startHeight: el.getBoundingClientRect().height,
-    };
-    setResizing(true);
-    event.currentTarget.setPointerCapture?.(event.pointerId);
-  };
-
   return (
     <div
-      ref={stageRef}
-      className={`panel arena-stage${resizing ? " is-resizing" : ""}${finished ? " is-finished" : ""}`}
-      style={{
-        padding: 0,
-        ...(stageHeight != null
-          ? { height: `${stageHeight}px`, maxHeight: "70vh" }
-          : null),
-      }}
+      className={`panel arena-stage${finished ? " is-finished" : ""}`}
+      style={{ padding: 0 }}
     >
       <div
         style={{
@@ -466,14 +414,6 @@ export function ConstellationStage({
           labelOf={labelOf}
         />
       )}
-
-      <div
-        className="arena-stage-resize"
-        role="separator"
-        aria-orientation="horizontal"
-        aria-label="Resize constellation"
-        onPointerDown={startResize}
-      />
     </div>
   );
 }
