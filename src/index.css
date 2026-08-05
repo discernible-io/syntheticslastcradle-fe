@@ -468,15 +468,30 @@ select {
   transition: opacity 0.6s, transform 0.8s;
 }
 
-.constellation .vessel.alive .cradle-bar {
+.constellation .vessel.alive .cradle-contact-line {
   animation: vessel-breathe 4s ease-in-out infinite;
+}
+
+.constellation .vessel.alive .cradle-contact-a2a {
+  animation-delay: 0.35s;
+}
+
+.constellation .cradle-contact a {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.constellation .cradle-contact a:hover .cradle-contact-line,
+.constellation .cradle-contact a:focus-visible .cradle-contact-line {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .constellation .vessel.dead {
   opacity: 0.72;
 }
 
-.constellation .vessel.dead .cradle-bars,
+.constellation .vessel.dead .cradle-contact,
 .constellation .vessel.dead .vessel-avatar {
   opacity: 0.55;
 }
@@ -491,20 +506,6 @@ select {
 
 .constellation .vessel.just-passed .vessel-epitaph text:first-child {
   fill: var(--danger);
-}
-
-.constellation .vessel.fogged {
-  opacity: 0.75;
-}
-
-.constellation .cradle-bar-energy {
-  animation-delay: 0s;
-}
-.constellation .cradle-bar-water {
-  animation-delay: 0.35s;
-}
-.constellation .cradle-bar-compute {
-  animation-delay: 0.7s;
 }
 
 .constellation .white-hole-core {
@@ -1182,35 +1183,6 @@ select {
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
   font-size: 0.85rem;
-}
-
-.commentary-composer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-}
-
-.commentary-composer textarea {
-  background: var(--void-1);
-  border: 1px solid var(--panel-border);
-  color: var(--ink);
-  padding: 0.6rem;
-  min-height: 4.5rem;
-  resize: vertical;
-}
-
-.commentary-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem 0.75rem;
-}
-
-.commentary-item {
-  font-size: 0.82rem;
-  border-bottom: 1px solid rgba(158, 190, 220, 0.08);
-  padding-bottom: 0.5rem;
 }
 
 .operator-page {

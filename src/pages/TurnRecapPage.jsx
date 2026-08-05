@@ -4,7 +4,6 @@ import { getGameState, getMessages, getTrades, getTurns } from "../api/client.js
 import { lookupPassportDisplayName } from "../api/roditLookup.js";
 import { buildTurnReport } from "../api/turnReport.js";
 import { TurnRecapView } from "../components/recap/TurnRecapView.jsx";
-import { OperatorCommentary } from "../components/lobby/OperatorCommentary.jsx";
 import { useGameEvents } from "../hooks/useGameEvents.js";
 import { env } from "../config/env.js";
 import {
@@ -43,7 +42,7 @@ export function TurnRecapPage() {
         getGameState(gameId, { signal: ac.signal }),
         getMessages(gameId, selectedTurn, { signal: ac.signal }),
         getTrades(gameId, selectedTurn, { signal: ac.signal }),
-        getTurns(gameId, { signal: ac.signal }).catch(() => null),
+        getTurns(gameId, { playedOnly: true, signal: ac.signal }).catch(() => null),
       ]);
       if (ac.signal.aborted) return;
 
@@ -129,19 +128,14 @@ export function TurnRecapPage() {
       {loading && !report && <div className="muted">Building highlight reel…</div>}
       {error && <div className="error-banner">{error}</div>}
       {report && (
-        <>
-          <TurnRecapView
-            report={report}
-            gameId={gameId}
-            visibleTurns={visible}
-            currentTurn={currentTurn}
-            prevTurn={prevTurn}
-            nextTurn={nextTurn}
-          />
-          <div style={{ maxWidth: 820, margin: "1.25rem auto" }}>
-            <OperatorCommentary gameId={gameId} turn={selectedTurn} />
-          </div>
-        </>
+        <TurnRecapView
+          report={report}
+          gameId={gameId}
+          visibleTurns={visible}
+          currentTurn={currentTurn}
+          prevTurn={prevTurn}
+          nextTurn={nextTurn}
+        />
       )}
     </div>
   );

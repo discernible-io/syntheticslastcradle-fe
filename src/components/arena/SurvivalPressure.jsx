@@ -9,7 +9,6 @@ export function SurvivalPressure({ state, honors = null }) {
   const finished = state?.game?.status === "finished";
   const pressure = Math.min(100, Math.round((turn / 55) * 70 + Math.max(0, living - 2) * 8));
   const survivalText = state?.narrative?.survival?.summary;
-  const projected = state?.projectedSurvival;
   const honorees = finished
     ? resolveRestartHonorees({
         honors,
@@ -73,15 +72,10 @@ export function SurvivalPressure({ state, honors = null }) {
       )}
       <div className="cradle-afford">
         {agents.map((a) => {
-          const cost = projected?.[a.id];
           let cls = "chip";
           let label = a.status === "dead" ? "husk" : "fog";
           if (a.status === "dead") cls += " fail";
-          else if (cost) {
-            // Spectator fog: we only know projected cost, not inventory mid-game
-            label = "cost known";
-            cls += " tight";
-          } else if (a.status === "alive") {
+          else if (a.status === "alive") {
             cls += " ok";
             label = "alive";
           }

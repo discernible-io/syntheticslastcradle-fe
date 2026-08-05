@@ -7,13 +7,32 @@ async function apiGet(path, { signal } = {}) {
     headers: { Accept: "application/json" },
     signal,
   });
+
+  const text = await res.text().catch(() => "");
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+  }
+
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    const err = new Error(`API ${res.status} for ${path}${text ? `: ${text.slice(0, 180)}` : ""}`);
+    const code = data?.error?.code;
+    const msg =
+      data?.error?.message ||
+      data?.message ||
+      (text ? text.slice(0, 180) : "") ||
+      res.statusText;
+    const err = new Error(`API ${res.status} for ${path}${msg ? `: ${msg}` : ""}`);
     err.status = res.status;
+    err.code = code;
+    err.data = data;
     throw err;
   }
-  return res.json();
+
+  return data ?? {};
 }
 
 export function listGames({ status, contestMode, limit = 40, offset = 0, signal } = {}) {

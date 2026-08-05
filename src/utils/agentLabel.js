@@ -44,6 +44,17 @@ export function agentLabelFromId(agentId, agents = [], passportNameByRodit = {})
   return agentLabel(agent, passportNameByRodit);
 }
 
+/** Prefer trade ledger displayName when present, else agent / passport label. */
+export function tradePartyLabel(agentId, tradeDisplayName, agents = [], passportNameByRodit = {}) {
+  const byId = Object.fromEntries((agents || []).map((a) => [a.id, a]));
+  const agent = byId[agentId] || { id: agentId };
+  const preferred =
+    tradeDisplayName && !isJunkDisplayName(tradeDisplayName, agent.roditId)
+      ? String(tradeDisplayName).trim()
+      : agent.displayName;
+  return agentLabel({ ...agent, id: agentId, displayName: preferred }, passportNameByRodit);
+}
+
 /** Initials from a display name (e.g. "Cornelius Drew" → "CD"). */
 export function nameInitials(name, maxParts = 2) {
   const parts = String(name || "")

@@ -6,7 +6,6 @@ import { DispatchFeed } from "../components/arena/DispatchFeed.jsx";
 import { TradeTicker } from "../components/arena/TradeTicker.jsx";
 import { SurvivalPressure } from "../components/arena/SurvivalPressure.jsx";
 import { CyclePicker } from "../components/arena/CyclePicker.jsx";
-import { OperatorCommentary } from "../components/lobby/OperatorCommentary.jsx";
 import { getHonors } from "../api/client.js";
 import { useEffect, useState } from "react";
 
@@ -116,7 +115,6 @@ export function ArenaPage() {
           />
           <div className="arena-bottom">
             <TradeTicker trades={trades} agents={state.agents || []} tradesTurn={tradesTurn} />
-            <OperatorCommentary gameId={gameId} turn={turn || 0} />
           </div>
         </div>
       )}

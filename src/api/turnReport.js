@@ -3,7 +3,7 @@
  * Turn activity index (played vs quiet): GET .../turns — used for picker / prev-next.
  * Full narrative turn-report endpoint remains optional; this stays the offline assembler.
  */
-import { agentLabel, agentLabelFromId } from "../utils/agentLabel.js";
+import { agentLabel, agentLabelFromId, tradePartyLabel } from "../utils/agentLabel.js";
 import { eliminationCause } from "../utils/elimination.js";
 
 export function buildTurnReport({
@@ -37,8 +37,8 @@ export function buildTurnReport({
       id: t.id,
       from: t.fromAgentId,
       to: t.toAgentId,
-      fromName: nameOf(t.fromAgentId),
-      toName: nameOf(t.toAgentId),
+      fromName: tradePartyLabel(t.fromAgentId, t.fromDisplayName, agents, passportNameByRodit),
+      toName: tradePartyLabel(t.toAgentId, t.toDisplayName, agents, passportNameByRodit),
       energy: Number(t.energy) || 0,
       water: Number(t.water) || 0,
       compute: Number(t.compute) || 0,

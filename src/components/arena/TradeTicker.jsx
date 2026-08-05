@@ -1,4 +1,5 @@
 import { useAgentLabels } from "../../hooks/useAgentLabels.js";
+import { tradePartyLabel } from "../../utils/agentLabel.js";
 
 function resourceBits(t) {
   const bits = [];
@@ -27,12 +28,12 @@ function DealSnippets({ snippets }) {
 }
 
 export function TradeTicker({ trades = [], agents = [], tradesTurn = null }) {
-  const { labelOf } = useAgentLabels(agents);
+  const { passportNameByRodit } = useAgentLabels(agents);
 
   return (
     <div className="panel trade-ticker">
       <div className="ticker-header">
-        <span>Trade ticker</span>
+        <span>Last turn trades</span>
         <span className="tiny">
           {tradesTurn != null ? `cycle ${tradesTurn} · ` : ""}
           {trades.length} transfer{trades.length === 1 ? "" : "s"}
@@ -41,7 +42,9 @@ export function TradeTicker({ trades = [], agents = [], tradesTurn = null }) {
       <div className="ticker-track">
         {trades.length === 0 && (
           <div className="empty-state" style={{ padding: "1rem" }}>
-            No transfers on this ledger yet.
+            {tradesTurn != null
+              ? `No transfers settled in cycle ${tradesTurn}.`
+              : "No settled transfers yet."}
           </div>
         )}
         {[...trades].reverse().map((t) => {
@@ -50,6 +53,18 @@ export function TradeTicker({ trades = [], agents = [], tradesTurn = null }) {
             t.transferCount != null && t.transferCount > 1
               ? `leg ${(t.transferIndex ?? 0) + 1}/${t.transferCount}`
               : null;
+          const fromName = tradePartyLabel(
+            t.fromAgentId,
+            t.fromDisplayName,
+            agents,
+            passportNameByRodit,
+          );
+          const toName = tradePartyLabel(
+            t.toAgentId,
+            t.toDisplayName,
+            agents,
+            passportNameByRodit,
+          );
           return (
             <div key={t.id} className="ticker-row ticker-row-block">
               <div className="ticker-row-main">
@@ -57,9 +72,9 @@ export function TradeTicker({ trades = [], agents = [], tradesTurn = null }) {
                 {t.combinedWithInvest && <span className="tag">+invest</span>}
                 {multi && <span className="tiny">{multi}</span>}
                 <span>
-                  <strong>{labelOf(t.fromAgentId)}</strong>
+                  <strong>{fromName}</strong>
                   <span className="muted"> → </span>
-                  <strong>{labelOf(t.toAgentId)}</strong>
+                  <strong>{toName}</strong>
                 </span>
                 <span style={{ display: "inline-flex", gap: "0.35rem" }}>{resourceBits(t)}</span>
                 {t.rationale && (

@@ -28,7 +28,7 @@ export function useArenaData(gameId) {
       const [msgRes, tradeRes, turnsRes] = await Promise.all([
         getMessages(gameId, turn, { signal: ac.signal }).catch(() => ({ messages: [] })),
         getTrades(gameId, ledgerTurn, { signal: ac.signal }).catch(() => ({ trades: [] })),
-        getTurns(gameId, { signal: ac.signal }).catch(() => null),
+        getTurns(gameId, { playedOnly: true, signal: ac.signal }).catch(() => null),
       ]);
       if (ac.signal.aborted) return;
       setState(nextState);

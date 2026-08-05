@@ -58,8 +58,69 @@ export function parseUserselectedDn(rawDn) {
     NNSWF: find("NNSWF"),
     NSWF: find("NSWF"),
     AvatarURL: find("AvatarURL"),
+    ContactURI: find("ContactURI"),
     attributes,
   };
+}
+
+/**
+ * ContactURI shape: `scheme:authority:identifier`
+ * e.g. email:agenthood.me:andrew@agenthood.me
+ *      a2a:identyclaw.com:https://host:7443/a2a
+ */
+export function parseContactUri(raw) {
+  if (typeof raw !== "string" || !raw.trim()) return null;
+  const match = raw.trim().match(/^([^:]+):([^:]*):(.*)$/);
+  if (!match) return null;
+  return {
+    raw: raw.trim(),
+    scheme: match[1].toLowerCase(),
+    authority: match[2],
+    identifier: match[3],
+  };
+}
+
+export function contactUriFromUserselectedDn(rawDn) {
+  const { ContactURI } = parseUserselectedDn(rawDn);
+  return parseContactUri(ContactURI);
+}
+
+export function emailFromContactUri(contact) {
+  if (!contact || contact.scheme !== "email") return null;
+  const id = String(contact.identifier || "").trim();
+  if (!id.includes("@")) return null;
+  return id;
+}
+
+export function a2aUrlFromContactUri(contact) {
+  if (!contact || contact.scheme !== "a2a") return null;
+  const id = String(contact.identifier || "").trim();
+  if (!id) return null;
+  try {
+    const url = new URL(id);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+/** Derive canonical A2A endpoint from IdentyClaw wake webhook_url. */
+export function a2aUrlFromWebhook(webhookUrl) {
+  if (typeof webhookUrl !== "string" || !webhookUrl.trim()) return null;
+  try {
+    const url = new URL(webhookUrl.trim());
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    const path = url.pathname.replace(/\/+$/, "") || "";
+    if (!path.endsWith("/a2a")) {
+      url.pathname = `${path}/a2a`;
+    }
+    url.search = "";
+    url.hash = "";
+    return url.href;
+  } catch {
+    return null;
+  }
 }
 
 /** Prefer "NNSWF NSWF" (e.g. "Cornelius Drew"); null if neither is present. */
