@@ -957,6 +957,69 @@ select {
   margin-bottom: 0.35rem;
 }
 
+.recap-card.is-quiet-live {
+  border-style: dashed;
+  border-color: rgba(154, 171, 191, 0.35);
+}
+
+.cycle-picker {
+  margin: 0.15rem 0 0;
+}
+
+.cycle-picker--arena {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.cycle-picker-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.cycle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 2rem;
+  justify-content: center;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  color: var(--ink-dim);
+  background: rgba(10, 18, 32, 0.55);
+  font-size: 0.78rem;
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+.cycle-chip:hover {
+  color: var(--ink);
+  border-color: rgba(62, 200, 214, 0.4);
+  text-decoration: none;
+}
+
+.cycle-chip.is-active,
+.cycle-chip.is-current {
+  color: var(--ink);
+  border-color: rgba(62, 200, 214, 0.55);
+  background: rgba(62, 200, 214, 0.1);
+}
+
+.cycle-chip.is-quiet-live {
+  border-style: dashed;
+  color: var(--ink-mute);
+}
+
+.cycle-chip-hint {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-mute);
+}
+
 .quote-list {
   display: flex;
   flex-direction: column;

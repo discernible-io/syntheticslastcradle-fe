@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { getGameState, getMessages, getTrades } from "../api/client.js";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getGameState, getMessages, getTrades, getTurns } from "../api/client.js";
 import { env } from "../config/env.js";
 import { publicTradesTurn } from "../utils/tradeTurn.js";
+import { buildVisibleTurns } from "../utils/visibleTurns.js";
 import { useGameEvents } from "./useGameEvents.js";
 
 export function useArenaData(gameId) {
@@ -9,6 +10,7 @@ export function useArenaData(gameId) {
   const [messages, setMessages] = useState([]);
   const [trades, setTrades] = useState([]);
   const [tradesTurn, setTradesTurn] = useState(null);
+  const [turnActivity, setTurnActivity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [flashTrades, setFlashTrades] = useState([]);
@@ -23,15 +25,22 @@ export function useArenaData(gameId) {
       const nextState = await getGameState(gameId, { signal: ac.signal });
       const turn = nextState?.game?.currentTurn;
       const ledgerTurn = publicTradesTurn(nextState?.game);
-      const [msgRes, tradeRes] = await Promise.all([
+      const [msgRes, tradeRes, turnsRes] = await Promise.all([
         getMessages(gameId, turn, { signal: ac.signal }).catch(() => ({ messages: [] })),
         getTrades(gameId, ledgerTurn, { signal: ac.signal }).catch(() => ({ trades: [] })),
+        getTurns(gameId, { signal: ac.signal }).catch(() => null),
       ]);
       if (ac.signal.aborted) return;
       setState(nextState);
       setMessages(msgRes.messages || []);
       setTrades(tradeRes.trades || []);
       setTradesTurn(tradeRes.turnNumber ?? ledgerTurn);
+      setTurnActivity(
+        turnsRes || {
+          currentTurn: turn ?? 0,
+          turns: [],
+        },
+      );
       setError(null);
     } catch (err) {
       if (err.name === "AbortError") return;
@@ -68,11 +77,19 @@ export function useArenaData(gameId) {
     return () => clearTimeout(t);
   }, [trades]);
 
+  const { currentTurn, visible: visibleTurns } = useMemo(
+    () => buildVisibleTurns(turnActivity),
+    [turnActivity],
+  );
+
   return {
     state,
     messages,
     trades,
     tradesTurn,
+    turnActivity,
+    visibleTurns,
+    activityCurrentTurn: currentTurn,
     flashTrades,
     loading,
     error: error || sseError,

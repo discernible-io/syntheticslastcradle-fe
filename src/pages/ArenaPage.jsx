@@ -5,6 +5,7 @@ import { PhaseStrip } from "../components/arena/PhaseStrip.jsx";
 import { DispatchFeed } from "../components/arena/DispatchFeed.jsx";
 import { TradeTicker } from "../components/arena/TradeTicker.jsx";
 import { SurvivalPressure } from "../components/arena/SurvivalPressure.jsx";
+import { CyclePicker } from "../components/arena/CyclePicker.jsx";
 import { OperatorCommentary } from "../components/lobby/OperatorCommentary.jsx";
 import { getHonors } from "../api/client.js";
 import { useEffect, useState } from "react";
@@ -16,6 +17,8 @@ export function ArenaPage() {
     messages,
     trades,
     tradesTurn,
+    visibleTurns,
+    activityCurrentTurn,
     flashTrades,
     loading,
     error,
@@ -38,6 +41,7 @@ export function ArenaPage() {
 
   const turn = state?.game?.currentTurn;
   const finished = state?.game?.status === "finished";
+  const recapTurn = activityCurrentTurn || turn;
 
   return (
     <div>
@@ -57,8 +61,12 @@ export function ArenaPage() {
         <button type="button" className="btn btn-ghost" style={{ padding: "0.25rem 0.55rem" }} onClick={refresh}>
           Refresh
         </button>
-        {turn != null && (
-          <Link className="btn btn-ghost" style={{ padding: "0.25rem 0.55rem" }} to={`/watch/${gameId}/turn/${turn}`}>
+        {recapTurn != null && recapTurn > 0 && (
+          <Link
+            className="btn btn-ghost"
+            style={{ padding: "0.25rem 0.55rem" }}
+            to={`/watch/${gameId}/turn/${recapTurn}`}
+          >
             Turn recap
           </Link>
         )}
@@ -71,6 +79,13 @@ export function ArenaPage() {
             Last settle · {tradesTurn}
           </Link>
         )}
+      </div>
+      <div style={{ padding: "0.5rem 0.75rem 0" }}>
+        <CyclePicker
+          gameId={gameId}
+          visibleTurns={visibleTurns}
+          currentTurn={activityCurrentTurn || turn}
+        />
       </div>
 
       {error && (

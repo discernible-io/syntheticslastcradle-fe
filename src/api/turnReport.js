@@ -1,6 +1,7 @@
 /**
  * Build a turn highlight reel from public messages + trades + state snapshot.
- * Optional future API: GET .../turn-report?turn=N
+ * Turn activity index (played vs quiet): GET .../turns — used for picker / prev-next.
+ * Full narrative turn-report endpoint remains optional; this stays the offline assembler.
  */
 import { agentLabel, agentLabelFromId } from "../utils/agentLabel.js";
 import { eliminationCause } from "../utils/elimination.js";

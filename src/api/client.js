@@ -39,6 +39,17 @@ export function getTrades(gameId, turn, { signal } = {}) {
   return apiGet(`/api/game/games/${encodeURIComponent(gameId)}/trades${q}`, { signal });
 }
 
+/** Turn activity index. Optional playedOnly=true → only cycles with messages/trades/eliminations. */
+export function getTurns(gameId, { playedOnly = false, signal } = {}) {
+  const q = new URLSearchParams();
+  if (playedOnly) q.set("playedOnly", "1");
+  const qs = q.toString();
+  return apiGet(
+    `/api/game/games/${encodeURIComponent(gameId)}/turns${qs ? `?${qs}` : ""}`,
+    { signal },
+  );
+}
+
 export function getHonors(gameId, { signal } = {}) {
   return apiGet(`/api/game/games/${encodeURIComponent(gameId)}/honors`, { signal });
 }

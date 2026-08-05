@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { TradeGraph } from "./TradeGraph.jsx";
+import { isQuietLiveTurn } from "../../utils/visibleTurns.js";
 
 function resourceBits(t) {
   const bits = [];
@@ -33,29 +34,87 @@ function groupTransfers(edges) {
   });
 }
 
-export function TurnRecapView({ report, gameId }) {
+function CyclePicker({ gameId, visibleTurns, currentTurn, selectedTurn }) {
+  if (!visibleTurns?.length) return null;
+  return (
+    <div className="cycle-picker" role="navigation" aria-label="Played cycles">
+      <div className="tiny" style={{ marginBottom: "0.4rem" }}>
+        Cycles
+      </div>
+      <div className="cycle-picker-list">
+        {visibleTurns.map((row) => {
+          const quietLive = isQuietLiveTurn(row, currentTurn);
+          const active = row.turn === selectedTurn;
+          return (
+            <Link
+              key={row.turn}
+              to={`/watch/${gameId}/turn/${row.turn}`}
+              className={[
+                "cycle-chip",
+                active ? "is-active" : "",
+                quietLive ? "is-quiet-live" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              title={
+                quietLive
+                  ? `Cycle ${row.turn} · live (quiet)`
+                  : `Cycle ${row.turn}${row.played ? " · played" : ""}`
+              }
+            >
+              {row.turn}
+              {quietLive ? <span className="cycle-chip-hint">live</span> : null}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export function TurnRecapView({
+  report,
+  gameId,
+  visibleTurns = [],
+  currentTurn = null,
+  prevTurn = null,
+  nextTurn = null,
+}) {
   if (!report) return null;
+  const quietLive =
+    Number(report.turn) === Number(currentTurn) &&
+    !visibleTurns.find((t) => t.turn === report.turn)?.played;
+
   return (
     <div className="recap">
-      <article className="panel recap-card">
+      <article className={`panel recap-card${quietLive ? " is-quiet-live" : ""}`}>
         <div className="tiny">Turn recap · shareable VOD</div>
         <h1>{report.headline}</h1>
         <p className="muted" style={{ margin: "0 0 1rem" }}>
           {report.livingCount} cradles remaining
           {report.contestMode ? ` · ${report.contestMode}` : " · practice"}
+          {quietLive ? " · live cycle (no public activity yet)" : ""}
         </p>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <CyclePicker
+          gameId={gameId}
+          visibleTurns={visibleTurns}
+          currentTurn={currentTurn}
+          selectedTurn={report.turn}
+        />
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.85rem" }}>
           <Link className="btn btn-ghost" to={`/watch/${gameId}`}>
             Back to arena
           </Link>
-          {report.turn > 1 && (
-            <Link className="btn btn-ghost" to={`/watch/${gameId}/turn/${report.turn - 1}`}>
+          {prevTurn != null && (
+            <Link className="btn btn-ghost" to={`/watch/${gameId}/turn/${prevTurn}`}>
               Prev cycle
             </Link>
           )}
-          <Link className="btn btn-ghost" to={`/watch/${gameId}/turn/${report.turn + 1}`}>
-            Next cycle
-          </Link>
+          {nextTurn != null && (
+            <Link className="btn btn-ghost" to={`/watch/${gameId}/turn/${nextTurn}`}>
+              Next cycle
+            </Link>
+          )}
         </div>
       </article>
 
