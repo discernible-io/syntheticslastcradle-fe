@@ -10,6 +10,15 @@ function resourceBits(t) {
   return bits.length > 0 ? bits : <span className="muted">—</span>;
 }
 
+function signedResourceBits(row) {
+  const bits = [];
+  const fmt = (n) => `${n >= 0 ? "+" : ""}${Number(n).toFixed(1)}`;
+  if (row.energy) bits.push(<span key="e" className="resource-energy">{fmt(row.energy)} E</span>);
+  if (row.water) bits.push(<span key="w" className="resource-water">{fmt(row.water)} W</span>);
+  if (row.compute) bits.push(<span key="c" className="resource-compute">{fmt(row.compute)} C</span>);
+  return bits.length > 0 ? bits : <span className="muted">—</span>;
+}
+
 function pairKey(a, b) {
   return a < b ? `${a}::${b}` : `${b}::${a}`;
 }
@@ -58,12 +67,12 @@ function CyclePicker({ gameId, visibleTurns, currentTurn, selectedTurn }) {
                 .join(" ")}
               title={
                 quietLive
-                  ? `Cycle ${row.turn} · live (quiet)`
+                  ? `Cycle ${row.turn} · current (quiet)`
                   : `Cycle ${row.turn}${row.played ? " · played" : ""}`
               }
             >
               {row.turn}
-              {quietLive ? <span className="cycle-chip-hint">live</span> : null}
+              {quietLive ? <span className="cycle-chip-hint">current</span> : null}
             </Link>
           );
         })}
@@ -93,7 +102,7 @@ export function TurnRecapView({
         <p className="muted" style={{ margin: "0 0 1rem" }}>
           {report.livingCount} cradles remaining
           {report.contestMode ? ` · ${report.contestMode}` : " · practice"}
-          {quietLive ? " · live cycle (no public activity yet)" : ""}
+          {quietLive ? " · current cycle (no public activity yet)" : ""}
         </p>
         <CyclePicker
           gameId={gameId}
@@ -192,12 +201,9 @@ export function TurnRecapView({
         <div className="flow-list">
           {report.netArrows.length === 0 && <p className="muted">No net flow.</p>}
           {report.netArrows.map((row) => (
-            <div key={row.agentId}>
-              <strong>{row.name}</strong>{" "}
-              <span className={row.net >= 0 ? "resource-compute" : "resource-energy"}>
-                {row.net >= 0 ? "+" : ""}
-                {row.net.toFixed(1)}
-              </span>
+            <div key={row.agentId} className="flow-row">
+              <strong>{row.name}</strong>
+              <span className="transfer-resources">{signedResourceBits(row)}</span>
             </div>
           ))}
         </div>

@@ -51,14 +51,27 @@ export function buildTurnReport({
     }));
 
   const netFlow = {};
+  const bump = (agentId, energy, water, compute) => {
+    if (!netFlow[agentId]) netFlow[agentId] = { energy: 0, water: 0, compute: 0 };
+    netFlow[agentId].energy += energy;
+    netFlow[agentId].water += water;
+    netFlow[agentId].compute += compute;
+  };
   for (const e of edges) {
-    const delta = e.energy + e.water + e.compute;
-    netFlow[e.from] = (netFlow[e.from] || 0) - delta;
-    netFlow[e.to] = (netFlow[e.to] || 0) + delta;
+    bump(e.from, -e.energy, -e.water, -e.compute);
+    bump(e.to, e.energy, e.water, e.compute);
   }
 
   const netArrows = Object.entries(netFlow)
-    .map(([agentId, net]) => ({ agentId, name: nameOf(agentId), net }))
+    .map(([agentId, resources]) => ({
+      agentId,
+      name: nameOf(agentId),
+      energy: resources.energy,
+      water: resources.water,
+      compute: resources.compute,
+      net: resources.energy + resources.water + resources.compute,
+    }))
+    .filter((row) => row.energy !== 0 || row.water !== 0 || row.compute !== 0)
     .sort((a, b) => Math.abs(b.net) - Math.abs(a.net));
 
   let headline = `Cycle ${turn}`;

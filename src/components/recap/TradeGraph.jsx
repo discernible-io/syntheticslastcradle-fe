@@ -25,7 +25,13 @@ function shortenToward(from, toward, amount) {
   return { x: from.x + dx * t, y: from.y + dy * t };
 }
 
-function edgeGeometry(a, b, lane, laneCount) {
+function edgeGeometry(from, to, lane, laneCount) {
+  // Canonical chord so A→B and B→A share the same normal basis. Without this,
+  // flipping the direction flips the normal and cancels the lane offset —
+  // mutual arcs stack on one path and only the last colour/label shows.
+  const swap = from.x > to.x || (from.x === to.x && from.y > to.y);
+  const a = swap ? to : from;
+  const b = swap ? from : to;
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const len = Math.hypot(dx, dy) || 1;
@@ -40,8 +46,8 @@ function edgeGeometry(a, b, lane, laneCount) {
     y: (a.y + b.y) / 2 + ny * offset,
   };
 
-  const start = shortenToward(a, mid, NODE_R);
-  const end = shortenToward(b, mid, NODE_R + ARROW_PAD);
+  const start = shortenToward(from, mid, NODE_R);
+  const end = shortenToward(to, mid, NODE_R + ARROW_PAD);
   // Label sits near the curve apex, nudged outward a little more for mutuals.
   const label = {
     x: mid.x + nx * Math.sign(offset || 1) * (laneCount > 1 ? 6 : 0),

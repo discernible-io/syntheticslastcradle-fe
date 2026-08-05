@@ -24,12 +24,12 @@ export function CyclePicker({ gameId, visibleTurns = [], currentTurn = null }) {
                 .join(" ")}
               title={
                 quietLive
-                  ? `Cycle ${row.turn} · live (quiet)`
+                  ? `Cycle ${row.turn} · current (quiet)`
                   : `Cycle ${row.turn} recap`
               }
             >
               {row.turn}
-              {quietLive ? <span className="cycle-chip-hint">live</span> : null}
+              {quietLive ? <span className="cycle-chip-hint">current</span> : null}
             </Link>
           );
         })}

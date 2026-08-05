@@ -5,7 +5,7 @@ import { honorTitleByAgentId, RestartFinale, resolveRestartHonorees } from "./Re
 
 const AVATAR = {
   r: 32,
-  y: -102,
+  y: -78,
 };
 
 function layoutPositions(agents, width, height) {
@@ -76,10 +76,10 @@ function CradleContact({ email, a2aUrl, dead = false }) {
     return (
       <g className="cradle-contact empty">
         <text
-          y={-14}
+          y={-12}
           textAnchor="middle"
           fill="var(--ink-dim)"
-          fontSize="8"
+          fontSize="9"
           fontFamily="var(--font-body)"
           opacity="0.5"
         >
@@ -89,7 +89,7 @@ function CradleContact({ email, a2aUrl, dead = false }) {
     );
   }
 
-  const startY = lines.length === 1 ? -18 : -30;
+  const startY = lines.length === 1 ? -14 : -26;
   return (
     <g className={`cradle-contact${dead ? " dead" : ""}`}>
       {lines.map((line, i) => (
@@ -100,10 +100,10 @@ function CradleContact({ email, a2aUrl, dead = false }) {
         >
           <text
             className={`cradle-contact-line cradle-contact-${line.kind}`}
-            y={startY + i * 12}
+            y={startY + i * 13}
             textAnchor="middle"
             fill={line.kind === "email" ? "var(--water)" : "var(--compute)"}
-            fontSize="8"
+            fontSize="9"
             fontFamily="var(--font-body)"
             opacity={dead ? 0.55 : 0.92}
           >
@@ -357,10 +357,10 @@ export function ConstellationStage({
               )}
               <text
                 className="vessel-name"
-                y={16}
+                y={14}
                 textAnchor="middle"
                 fill="var(--ink)"
-                fontSize="11"
+                fontSize="13"
                 fontFamily="var(--font-body)"
               >
                 {label.length > 16 ? `${label.slice(0, 14)}…` : label}
@@ -368,7 +368,7 @@ export function ConstellationStage({
               {honorTitle && (
                 <text
                   className="vessel-honor-title"
-                  y={30}
+                  y={28}
                   textAnchor="middle"
                   fill={isAnchor ? "var(--white-hole)" : "var(--water)"}
                   fontSize="9"
