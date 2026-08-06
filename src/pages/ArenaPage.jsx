@@ -6,6 +6,7 @@ import { DispatchFeed } from "../components/arena/DispatchFeed.jsx";
 import { TradeTicker } from "../components/arena/TradeTicker.jsx";
 import { SurvivalPressure } from "../components/arena/SurvivalPressure.jsx";
 import { CyclePicker } from "../components/arena/CyclePicker.jsx";
+import { SpectatorGuide } from "../components/layout/SpectatorGuide.jsx";
 import { getHonors } from "../api/client.js";
 import { useEffect, useState } from "react";
 
@@ -99,6 +100,7 @@ export function ArenaPage() {
           <div className="arena-phases">
             <PhaseStrip game={state.game} />
             <SurvivalPressure state={state} honors={honors} />
+            <SpectatorGuide variant="sidebar" narrative={state.narrative} />
           </div>
           <div className="arena-dispatch">
             <DispatchFeed messages={messages} agents={state.agents || []} turn={turn} />

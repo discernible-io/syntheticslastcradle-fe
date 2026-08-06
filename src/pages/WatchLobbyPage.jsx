@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { listGames, getNarrative } from "../api/client.js";
 import { GameList } from "../components/lobby/GameList.jsx";
-import { NarrativeChrome } from "../components/layout/NarrativeChrome.jsx";
+import { SpectatorGuide } from "../components/layout/SpectatorGuide.jsx";
 
 export function WatchLobbyPage() {
   const [running, setRunning] = useState([]);
@@ -33,10 +33,10 @@ export function WatchLobbyPage() {
 
   return (
     <div>
-      <NarrativeChrome narrative={narrative} compact />
-      <h1 style={{ fontSize: "1.75rem", marginBottom: "0.35rem" }}>Live Arena</h1>
+      <SpectatorGuide variant="lobby" narrative={narrative} />
+      <h1 style={{ fontSize: "1.75rem", marginBottom: "0.35rem", marginTop: "1.25rem" }}>Live Arena</h1>
       <p className="muted" style={{ marginTop: 0, marginBottom: "1.25rem" }}>
-        Cradles stage, dispatch, and trade motion.
+        Cradles stage, dispatch, and trade motion — public talk, execution trades, rising survival costs.
       </p>
       {error && <div className="error-banner">{error}</div>}
       {loading && <div className="muted">Loading contests…</div>}

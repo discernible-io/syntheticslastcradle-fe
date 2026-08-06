@@ -153,6 +153,140 @@ select {
   backdrop-filter: blur(8px);
 }
 
+/* Spectator lore / how-to-watch */
+.spectator-guide {
+  padding: 0.85rem 1rem;
+}
+
+.spectator-kicker {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.spectator-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  margin-bottom: 0.35rem;
+  color: var(--white-hole);
+}
+
+.spectator-tagline {
+  margin: 0 0 1rem;
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+  max-width: 46rem;
+}
+
+.spectator-compact {
+  margin: 0 0 0.65rem;
+  color: var(--ink-dim);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.spectator-heading {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+  color: var(--ink);
+}
+
+.spectator-columns {
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr;
+  gap: 1.25rem 1.75rem;
+}
+
+.spectator-section-body {
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+}
+
+.spectator-section-body p {
+  margin: 0 0 0.65rem;
+}
+
+.spectator-section-body p:last-child {
+  margin-bottom: 0;
+}
+
+.spectator-phases {
+  margin: 0 0 0.65rem;
+  padding-left: 1.1rem;
+}
+
+.spectator-phases li {
+  margin-bottom: 0.4rem;
+}
+
+.spectator-phases li:last-child {
+  margin-bottom: 0;
+}
+
+.spectator-phases strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.spectator-fold {
+  border-top: 1px solid var(--panel-border);
+  padding: 0.35rem 0 0;
+  margin-top: 0.35rem;
+}
+
+.spectator-fold + .spectator-fold {
+  margin-top: 0.15rem;
+}
+
+.spectator-fold summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.78rem;
+  color: var(--water);
+  padding: 0.2rem 0;
+  user-select: none;
+}
+
+.spectator-fold summary::-webkit-details-marker {
+  display: none;
+}
+
+.spectator-fold summary::before {
+  content: "▸ ";
+  color: var(--ink-mute);
+}
+
+.spectator-fold[open] summary::before {
+  content: "▾ ";
+}
+
+.spectator-fold[open] summary {
+  margin-bottom: 0.35rem;
+}
+
+.spectator-guide-sidebar .spectator-section-body {
+  font-size: 0.75rem;
+  max-height: 14rem;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.spectator-guide-lobby {
+  margin-bottom: 0.25rem;
+}
+
+@media (max-width: 820px) {
+  .spectator-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
