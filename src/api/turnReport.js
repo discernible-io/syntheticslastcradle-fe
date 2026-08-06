@@ -91,6 +91,7 @@ export function buildTurnReport({
     quotes,
     edges,
     netArrows,
+    agents,
     eliminations: eliminatedThisTurn.map((a) => ({
       id: a.id,
       name: agentLabel(a, passportNameByRodit),

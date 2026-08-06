@@ -4,6 +4,7 @@ import { LandingPage } from "./pages/LandingPage.jsx";
 import { WatchLobbyPage } from "./pages/WatchLobbyPage.jsx";
 import { ArenaPage } from "./pages/ArenaPage.jsx";
 import { TurnRecapPage } from "./pages/TurnRecapPage.jsx";
+import { RecollectionsPage } from "./pages/RecollectionsPage.jsx";
 import { ContestsPage } from "./pages/ContestsPage.jsx";
 import { HallOfFamePage } from "./pages/HallOfFamePage.jsx";
 import { EnrollPage } from "./pages/EnrollPage.jsx";
@@ -53,6 +54,14 @@ export default function App() {
           element={
             <AppShell>
               <TurnRecapPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/watch/:gameId/recollections"
+          element={
+            <AppShell>
+              <RecollectionsPage />
             </AppShell>
           }
         />

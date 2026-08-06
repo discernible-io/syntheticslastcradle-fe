@@ -64,6 +64,11 @@ function GameRow({ game: g }) {
             Recap
           </Link>
         )}
+        {g.status === "finished" && (
+          <Link className="btn btn-ghost" to={`/watch/${g.id}/recollections`}>
+            Recollections
+          </Link>
+        )}
       </div>
     </div>
   );

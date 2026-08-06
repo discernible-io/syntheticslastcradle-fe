@@ -70,6 +70,15 @@ export function ArenaPage() {
             Turn recap
           </Link>
         )}
+        {finished && (
+          <Link
+            className="btn btn-ghost"
+            style={{ padding: "0.25rem 0.55rem" }}
+            to={`/watch/${gameId}/recollections`}
+          >
+            Recollections
+          </Link>
+        )}
         {tradesTurn != null && tradesTurn !== turn && (
           <Link
             className="btn btn-ghost"
@@ -114,6 +123,7 @@ export function ArenaPage() {
             status={state.game?.status}
             winnerIds={state.game?.winnerIds || []}
             finishReason={state.game?.finishReason || honors?.finishReason}
+            gameId={gameId}
           />
           <div className="arena-bottom">
             <TradeTicker trades={trades} agents={state.agents || []} tradesTurn={tradesTurn} />

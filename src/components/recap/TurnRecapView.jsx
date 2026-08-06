@@ -1,6 +1,18 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAgentLabels } from "../../hooks/useAgentLabels.js";
 import { TradeGraph } from "./TradeGraph.jsx";
 import { isQuietLiveTurn } from "../../utils/visibleTurns.js";
+
+function initials(name) {
+  if (!name) return "?";
+  return String(name)
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
+}
 
 function resourceBits(t) {
   const bits = [];
@@ -88,11 +100,20 @@ export function TurnRecapView({
   currentTurn = null,
   prevTurn = null,
   nextTurn = null,
+  gameStatus = null,
 }) {
+  const agents = report?.agents || [];
+  const { avatarOf } = useAgentLabels(agents);
+  const [brokenAvatars, setBrokenAvatars] = useState(() => new Set());
+
   if (!report) return null;
   const quietLive =
     Number(report.turn) === Number(currentTurn) &&
     !visibleTurns.find((t) => t.turn === report.turn)?.played;
+  const isFinishingTurn =
+    gameStatus === "finished" &&
+    currentTurn != null &&
+    Number(report.turn) === Number(currentTurn);
 
   return (
     <div className="recap">
@@ -103,6 +124,7 @@ export function TurnRecapView({
           {report.livingCount} cradles remaining
           {report.contestMode ? ` · ${report.contestMode}` : " · practice"}
           {quietLive ? " · current cycle (no public activity yet)" : ""}
+          {isFinishingTurn ? " · finishing cycle" : ""}
         </p>
         <CyclePicker
           gameId={gameId}
@@ -124,19 +146,61 @@ export function TurnRecapView({
               Next cycle
             </Link>
           )}
+          {isFinishingTurn && (
+            <Link className="btn btn-primary" to={`/watch/${gameId}/recollections`}>
+              Read recollections
+            </Link>
+          )}
         </div>
       </article>
+
+      {isFinishingTurn && (
+        <article className="panel recap-card recollection-cta">
+          <h2 style={{ fontSize: "1.1rem", marginBottom: "0.35rem" }}>Agent recollections</h2>
+          <p className="muted" style={{ margin: "0 0 0.85rem" }}>
+            After death reports and the restart, cradles may file public memoirs — relationships,
+            espionage, investment, trade, and incidents.
+          </p>
+          <Link className="btn btn-primary" to={`/watch/${gameId}/recollections`}>
+            Open recollections
+          </Link>
+        </article>
+      )}
 
       <article className="panel recap-card">
         <h2 style={{ fontSize: "1.1rem", marginBottom: "0.75rem" }}>Negotiation quotes</h2>
         <div className="quote-list">
           {report.quotes.length === 0 && <p className="muted">No public messages this cycle.</p>}
-          {report.quotes.map((q) => (
-            <blockquote key={q.id} className="quote">
-              <span className="who">{q.who}</span>
-              {q.body}
-            </blockquote>
-          ))}
+          {report.quotes.map((q) => {
+            const avatarUrl = avatarOf(q.agentId);
+            const showAvatar = Boolean(avatarUrl) && !brokenAvatars.has(q.agentId);
+            return (
+              <blockquote key={q.id} className="quote">
+                <span className="who">
+                  <span className="quote-avatar" style={{ color: "var(--water)" }} aria-hidden="true">
+                    {showAvatar ? (
+                      <img
+                        src={avatarUrl}
+                        alt=""
+                        onError={() => {
+                          setBrokenAvatars((prev) => {
+                            if (prev.has(q.agentId)) return prev;
+                            const next = new Set(prev);
+                            next.add(q.agentId);
+                            return next;
+                          });
+                        }}
+                      />
+                    ) : (
+                      initials(q.who)
+                    )}
+                  </span>
+                  {q.who}
+                </span>
+                {q.body}
+              </blockquote>
+            );
+          })}
         </div>
       </article>
 

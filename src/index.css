@@ -702,6 +702,25 @@ select {
   color: var(--ink-dim);
 }
 
+.restart-finale-links {
+  margin: 0.55rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  pointer-events: auto;
+}
+
+.restart-finale-link {
+  font-size: 0.78rem;
+  color: var(--water);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.restart-finale-link:hover {
+  color: var(--ink);
+}
+
 .restart-finale-waiting {
   margin: 0;
   align-self: center;
@@ -1131,11 +1150,80 @@ select {
 }
 
 .quote .who {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   color: var(--ink);
   font-weight: 600;
   font-size: 0.78rem;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.35rem;
+}
+
+.quote-avatar {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.55rem;
+  font-weight: 600;
+  background: var(--void-2);
+  border: 1px solid var(--panel-border);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.quote-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.recollection-cta {
+  border-color: rgba(62, 200, 214, 0.35);
+}
+
+.recollection-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.recollection-name {
+  font-size: 1.15rem;
+  margin: 0 0 0.2rem;
+  font-family: var(--font-display);
+}
+
+.recollection-meta {
+  margin: 0;
+}
+
+.recollection-topics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+}
+
+.recollection-topic h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--water);
+  font-weight: 600;
+}
+
+.recollection-topic p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-dim);
+  white-space: pre-wrap;
 }
 
 .trade-graph {

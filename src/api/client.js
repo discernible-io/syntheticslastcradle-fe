@@ -73,6 +73,11 @@ export function getHonors(gameId, { signal } = {}) {
   return apiGet(`/api/game/games/${encodeURIComponent(gameId)}/honors`, { signal });
 }
 
+/** Public agent memoirs after elimination or finish. */
+export function getRecollections(gameId, { signal } = {}) {
+  return apiGet(`/api/game/games/${encodeURIComponent(gameId)}/recollections`, { signal });
+}
+
 export function getAgentIdentity(gameId, agentId, { signal } = {}) {
   return apiGet(
     `/api/game/games/${encodeURIComponent(gameId)}/players/${encodeURIComponent(agentId)}/identity`,

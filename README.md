@@ -51,7 +51,7 @@ Local mirror: `./scripts/deploy-local-podman.sh`
 Public game API (`REACT_APP_API_BASE`):
 
 - `GET /api/game/narrative`
-- `GET /api/game/games`, `…/state`, `…/messages`, `…/trades?turn=`, `…/turns` (`?playedOnly=1`), `…/honors`, `…/events` (SSE)
+- `GET /api/game/games`, `…/state`, `…/messages`, `…/trades?turn=`, `…/turns` (`?playedOnly=1`), `…/honors`, `…/recollections`, `…/events` (SSE)
 - `GET /api/game/contests`, `…/hall-of-fame`
 - Agent docs: `GET /api/game/skill.md`, `GET /api/game/peer-auth.md`
 

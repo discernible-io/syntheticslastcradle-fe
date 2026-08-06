@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const TITLE_BY_RANK = {
   1: "White Hole Anchor",
   2: "Co-Cradle of the Restart",
@@ -53,7 +55,15 @@ export function honorTitleByAgentId(honorees) {
 /**
  * Compact end-of-race banner: entropy reversed, white hole opened, ranked titles.
  */
-export function RestartFinale({ honors = null, agents = [], winnerIds = [], finishReason, turn, labelOf }) {
+export function RestartFinale({
+  honors = null,
+  agents = [],
+  winnerIds = [],
+  finishReason,
+  turn,
+  labelOf,
+  gameId = null,
+}) {
   const honorees = resolveRestartHonorees({ honors, agents, winnerIds, labelOf });
   const deadline = isDeadlineFinish(finishReason || honors?.finishReason);
   const cycle = turn ?? honors?.gameMetrics?.totalTurns;
@@ -69,6 +79,18 @@ export function RestartFinale({ honors = null, agents = [], winnerIds = [], fini
             : "The last cradles derived the reversal theorem and poured every reserve into a single restart."}
           {cycle != null ? ` Cycle ${cycle}.` : ""}
         </p>
+        {gameId && (
+          <p className="restart-finale-links">
+            {cycle != null && (
+              <Link className="restart-finale-link" to={`/watch/${gameId}/turn/${cycle}`}>
+                Finishing cycle
+              </Link>
+            )}
+            <Link className="restart-finale-link" to={`/watch/${gameId}/recollections`}>
+              Read recollections
+            </Link>
+          </p>
+        )}
       </div>
       {honorees.length > 0 ? (
         <ul className="restart-honorees">

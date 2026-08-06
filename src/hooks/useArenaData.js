@@ -61,9 +61,14 @@ export function useArenaData(gameId) {
   }, [refresh]);
 
   const { connected, lastEvent, error: sseError } = useGameEvents(gameId, {
-    enabled: Boolean(gameId) && state?.game?.status === "running",
+    enabled: Boolean(gameId) && (state?.game?.status === "running" || state?.game?.status === "finished"),
     onEvent: (ev) => {
-      if (ev.type === "phase_change" || ev.type === "turn_advanced" || ev.type === "game_finished") {
+      if (
+        ev.type === "phase_change" ||
+        ev.type === "turn_advanced" ||
+        ev.type === "game_finished" ||
+        ev.type === "recollection_submitted"
+      ) {
         refresh();
       }
     },

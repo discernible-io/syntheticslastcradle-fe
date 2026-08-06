@@ -58,6 +58,7 @@ export function useGameEvents(gameId, { enabled = true, onEvent } = {}) {
       "game_started",
       "game_cancelled",
       "prize_settlement",
+      "recollection_submitted",
       "connected",
     ]) {
       es.addEventListener(name, handle(name));
